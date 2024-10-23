@@ -121,7 +121,7 @@ class CMakeBuild(build_ext):
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
     name="vmk-spectrum",
-    version="0.0.10",
+    version="0.0.8",
     author="leadpogrommer",
     long_description="Library for communication with VMK spectrometers",
     long_description_content_type="text/plain",
