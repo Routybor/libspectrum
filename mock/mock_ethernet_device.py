@@ -1,47 +1,86 @@
-import time
+import socket
+import struct
 import numpy as np
-from multiprocessing import Process, Queue
-from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
-from struct import pack, unpack
+from threading import Thread
+from time import sleep
 
-udp_port = 555
-tcp_port = 556
-udp_buff_size = 65536
+UDP_PORT = 555
+TCP_PORT = 556
+UDP_BUFFER_SIZE = 65536
+
+
+def mock_ini_data():
+    """Returns mock initialization data structured like EthernetDeviceIni."""
+    return struct.pack(
+        "<B3xHHHHxBHHIBBff", 2, 1024, 1, 255, 1, 1, 1, 0, 2048, 0xAB, 0xAB, 23.0, 1.5
+    )
+
+
+def mock_frame_data(n_times, num_pixels):
+    """Generate mock measurement data similar to what `readFrame` might produce."""
+    header = np.array([0, 0, 0x8000, 0x8000, 0xABAB, 0xABAB], dtype=np.uint16)
+    samples = np.random.randint(
+        0, 4096, size=(n_times, num_pixels - len(header)), dtype=np.uint16
+    )
+    data = np.hstack([np.tile(header, (n_times, 1)), samples])
+    return data.tobytes()
 
 
 class MockEthernetDevice:
-    def __init__(self, ip: str) -> None:
+    def __init__(self, ip="127.0.0.1"):
         self.ip = ip
-        self.seq_num = 1
+        self.udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def start(self):
-        self.udp_sock = socket(family=AF_INET, type=SOCK_DGRAM)
-        self.udp_sock.bind((self.ip, udp_port))
-        self.tcp_sock = socket(family=AF_INET, type=SOCK_STREAM)
-        self.tcp_sock.bind((self.ip, tcp_port))
-        self.tcp_sock.listen(1)
-        print(f"Mock Ethernet device running on {self.ip}")
+        Thread(target=self.run_udp, daemon=True).start()
+        Thread(target=self.run_tcp, daemon=True).start()
+
+    def run_udp(self):
+        self.udp_sock.bind((self.ip, UDP_PORT))
+        print("UDP mock server started...")
         while True:
-            data, addr = self.udp_sock.recvfrom(udp_buff_size)
-            self.handle_udp_request(data=data, addr=addr)
-            conn, _ = self.tcp_sock.accept()
-            self.handle_tcp_request(conn=conn)
+            self.udp_sock.settimeout(1.0)
+            try:
+                data, addr = self.udp_sock.recvfrom(UDP_BUFFER_SIZE)
+            except socket.timeout:
+                print("No data received, retrying...")
+                continue
+            opcode, seq_num = struct.unpack("<HH", data[:4])
+            response_code = 0  # Success
+            response = struct.pack("<H2xHH", response_code, opcode, seq_num)
+            response += mock_ini_data() if opcode == 0x800B else b""
+            print(f"Received opcode: {opcode}, sending response: {response}")
+            self.udp_sock.sendto(response, addr)
 
-    def handle_tcp_request(self, conn) -> None:
-        frame = np.random.randint(low=0, high=65535, size=(10, 2048), dtype=np.uint16)
-        conn.send(frame.tobytes())
-        conn.close()
+    def run_tcp(self):
+        self.tcp_sock.bind((self.ip, TCP_PORT))
+        self.tcp_sock.listen(1)
+        print("TCP mock server started...")
+        while True:
+            conn, addr = self.tcp_sock.accept()
+            print("TCP connection from:", addr)
+            try:
+                while True:
+                    data = conn.recv(UDP_BUFFER_SIZE)
+                    if not data:
+                        break
+                    opcode, seq_num, n_times = struct.unpack("<H2xI", data[:8])
+                    if opcode == 0x0005:
+                        num_pixels = 2048
+                        conn.sendall(mock_frame_data(n_times, num_pixels))
+                    else:
+                        print(f"Unknown opcode received: {opcode}")
+            finally:
+                conn.close()
+                print("TCP connection closed")
 
-    def handle_udp_request(self, data, addr):
-        opcode, seq_num = unpack("<HH", data[:4])
-        response = pack("<HH", opcode, seq_num) + bytes(12)
-        self.udp_sock.sendto(response, addr)
 
-    def stop(self) -> None:
-        self.udp_sock.close()
-        self.tcp_sock.close()
+mock_device = MockEthernetDevice()
+mock_device.start()
 
-
-def run_mock_device(ip):
-    device = MockEthernetDevice(ip=ip)
-    device.start()
+try:
+    while True:
+        sleep(1)
+except KeyboardInterrupt:
+    print("Mock server shutting down...")
