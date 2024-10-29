@@ -1,5 +1,5 @@
-from pyspectrum import Spectrometer
-from pyspectrum.device_factory import EthernetID
+from pyspectrum_debug import Spectrometer
+from pyspectrum_debug.device_factory import EthernetID
 
 def run_test():
     # Открываем устройство
@@ -9,7 +9,7 @@ def run_test():
     device.set_config(
         exposure=1,     # Экспозиция 1 мс
         n_times=10,   # За один раз будет считана 10 кадров
-        wavelength_calibration_path='data/profile.json' # Путь к файлу калибровки длин волн
+        wavelength_calibration_path='./mock/data/profile.json' # Путь к файлу калибровки длин волн
     )
 
     # Чтение темнового сигнала (ячейку нужно выполнять, закрыв спектрометр от света)
