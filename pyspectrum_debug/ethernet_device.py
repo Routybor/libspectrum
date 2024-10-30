@@ -4,12 +4,12 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-CMD_READ_INI            = 0x800B
-CMD_READ_ASSEMBLY_SWAP  = 0x8013
-CMD_READ_MULTILINE      = 0x0005
-CMD_SET_LINE_LENGTH     = 0x000C
-CMD_SET_LINE_NUMBER     = 0x0010
-CMD_SET_TIMER           = 0x0002
+CMD_READ_INI = 0x800B
+CMD_READ_ASSEMBLY_SWAP = 0x8013
+CMD_READ_MULTILINE = 0x0005
+CMD_SET_LINE_LENGTH = 0x000C
+CMD_SET_LINE_NUMBER = 0x0010
+CMD_SET_TIMER = 0x0002
 
 print("CMD_READ_INI == ", CMD_READ_INI)
 print("CMD_READ_ASSEMBLY_SWAP == ", CMD_READ_ASSEMBLY_SWAP)
@@ -64,6 +64,7 @@ class EthernetDevice:
         return self.opened
 
     def setTimer(self, millis):
+        # !!! DUBUG VERSION !!!
         if millis < self.ini.min_exposure:
             millis = self.ini.min_exposure / 1000
             # raise Exception(f'Exposure too low, minimal is {self.ini.min_exposure}')
@@ -76,10 +77,7 @@ class EthernetDevice:
         if exponent >= 4:
             raise Exception("Exposure too big")
 
-        self.send_command(
-            CMD_SET_TIMER,
-            data=struct.pack('<H2xH', millis, exponent)
-        )
+        self.send_command(CMD_SET_TIMER, data=struct.pack("<H2xH", millis, exponent))
 
     def close(self):
         self.tcp_sock.close()
@@ -89,24 +87,28 @@ class EthernetDevice:
         ini = self.ini
         self.set_line_length(ini.num_pixels, ini.num_chips)
         arr = np.empty((n_times, ini.num_pixels), dtype=np.uint16)
-        self.send_command(CMD_READ_MULTILINE, struct.pack('<H2xI', 0, n_times))
+        self.send_command(CMD_READ_MULTILINE, struct.pack("<H2xI", 0, n_times))
         self.tcp_sock.recv_into(arr, n_times * ini.num_pixels * 2, MSG_WAITALL)
-        measurement_header = np.array([0, 0, 0x8000, 0x8000, 0xabab, 0xabab])
+        measurement_header = np.array([0, 0, 0x8000, 0x8000, 0xABAB, 0xABAB])
         header_len = len(measurement_header)
         for i in range(n_times):
             if not np.array_equal(measurement_header, arr[i][:header_len]):
-                raise Exception('Invalid measurement header')
+                print(measurement_header, arr[i][:header_len])
+                raise Exception("Invalid measurement header")
 
-        samples = arr[:, header_len:].astype('int32')
+        samples = arr[:, header_len:].astype("int32")
         # TODO: clipped support
         return EthernetFrame(samples, np.zeros(samples.shape))
 
     # internal stuff
-    def send_command(self, opcode, data=b'', ext_packets=0, pad_to=16):
+    def send_command(self, opcode, data=b"", ext_packets=0, pad_to=16):
         seq_num = self.seq_num
         self.seq_num += 1
-        # opcode = 2
-        packet = struct.pack('<HH', opcode, seq_num) + data + bytes([0]*(pad_to-4-len(data)))
+        packet = (
+            struct.pack("<HH", opcode, seq_num)
+            + data
+            + bytes([0] * (pad_to - 4 - len(data)))
+        )
         self.udp_sock.sendto(packet, (self.dev_addr, udp_port))
 
         response_payloads = []
@@ -114,21 +116,34 @@ class EthernetDevice:
         for i in range(1 + ext_packets):
             print(f"Attempt to send command = {opcode}")
             response = self.udp_sock.recvfrom(udp_buff_size)[0]
-            resp_code, resp_cmd, resp_seq_num = struct.unpack('<H2xHH', response[:8])
+            resp_code, resp_cmd, resp_seq_num = struct.unpack("<H2xHH", response[:8])
             if resp_code > 2:
-                raise Exception(f'Unsuccessful response code: {resp_code}')
+                raise Exception(f"Unsuccessful response code: {resp_code}")
             if resp_cmd != opcode:
-                exit(1)
-                # raise Exception(f'Response opcode does not match request')
+                raise Exception(f"Response opcode does not match request")
             if resp_seq_num != seq_num:
-                raise Exception(f'Response sequence number does not match request')
+                raise Exception(f"Response sequence number does not match request")
             response_payloads.append(response[8:])
 
         return response_payloads
 
     def read_ini(self) -> EthernetDeviceIni:
         data = self.send_command(CMD_READ_INI, data=bytes([0]), ext_packets=1)[1]
-        chips_num, chip_pixel_num, chip_type, adc_rate, config_bits, assembly_type, min_exposure_value, min_exposure_exponent, pixel_number, dia_present, termostat_en, temp0, v0 = struct.unpack('<B3xHHBBxBHHIBBff', data[:30])
+        (
+            chips_num,
+            chip_pixel_num,
+            chip_type,
+            adc_rate,
+            config_bits,
+            assembly_type,
+            min_exposure_value,
+            min_exposure_exponent,
+            pixel_number,
+            dia_present,
+            termostat_en,
+            temp0,
+            v0,
+        ) = struct.unpack("<B3xHHBBxBHHIBBff", data[:30])
         return EthernetDeviceIni(
             num_chips=chips_num,
             num_pixels_per_chip=chip_pixel_num,
@@ -136,7 +151,7 @@ class EthernetDevice:
             adc_rate=adc_rate,
             config_bits=config_bits,
             assembly_type=assembly_type,
-            min_exposure=0.1*min_exposure_value*(10**min_exposure_exponent),
+            min_exposure=0.1 * min_exposure_value * (10**min_exposure_exponent),
             num_pixels=pixel_number,
             mtr0=temp0,
             mui0=v0,
@@ -146,9 +161,5 @@ class EthernetDevice:
 
     def set_line_length(self, num_pixels, num_chips):
         self.send_command(
-            CMD_SET_LINE_LENGTH,
-            struct.pack('<IH', num_pixels, num_chips)
+            CMD_SET_LINE_LENGTH, struct.pack("<IH", num_pixels, num_chips)
         )
-
-b'\x01\x00\x00\x00\x0b\x80\x01\x00'
-b'\x01\x00\x00\x00\x02\x00\x02\x00'

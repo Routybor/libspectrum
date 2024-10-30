@@ -30,7 +30,6 @@ mock_ini_data = {
 
 
 def pack_ini_data():
-    """Pack the mock INI data as binary for a response."""
     dia_present = 0xAB if mock_ini_data["dia_present"] else 0x00
     thermostat_enabled = 0xAB if mock_ini_data["thermostat_enabled"] else 0x00
     return struct.pack(
@@ -57,6 +56,7 @@ mock_ini_response = pack_ini_data()
 def start_udp_server():
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_sock.bind(("127.0.0.1", UDP_PORT))
+    global tcp_connection_active
 
     print("Mock UDP server started on port 555")
 
@@ -66,7 +66,7 @@ def start_udp_server():
             continue
 
         opcode, seq_num = struct.unpack("<HH", data[:4])
-
+        print(f"Received opcode: {opcode}, seq_num: {seq_num}")
         if opcode == CMD_READ_INI:
             ack_response = struct.pack("<HHHH", 0x0001, 0x0, CMD_READ_INI, seq_num)
             udp_sock.sendto(ack_response, addr)
@@ -99,33 +99,28 @@ def start_udp_server():
             udp_sock.sendto(set_line_length_ack, addr)
 
         elif opcode == CMD_READ_MULTILINE:
+            if not tcp_connection_active:
+                error_response = struct.pack(
+                    "<HHHH", 0x0002, 0x0, CMD_READ_MULTILINE, seq_num
+                )
+                udp_sock.sendto(error_response, addr)
+                continue
             control_register, line_number_low, line_number_high = struct.unpack(
                 "<HHH", data[4:10]
             )
             line_number = (line_number_high << 16) | line_number_low
 
             print(
-                f"Received ReadMultiLine command with Control_register: {control_register}, lineNumber: {line_number}"
+                f"Received ReadMultiLine command with lineNumber: {line_number}, Control_register: {control_register}"
             )
 
-            read_multiline_ack = struct.pack(
+            ack_response = struct.pack(
                 "<HHHH", 0x0001, 0x0, CMD_READ_MULTILINE, seq_num
             )
-            udp_sock.sendto(read_multiline_ack, addr)
+            udp_sock.sendto(ack_response, addr)
 
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_sock:
-                    tcp_sock.connect(("127.0.0.1", TCP_PORT))
-                    for _ in range(line_number):
-                        sync_signal = struct.pack("<H", 0xABCD)
-                        data = np.random.randint(
-                            0, 65535, size=mock_ini_data["num_pixels"], dtype=np.uint16
-                        )
-                        data = data ^ 0x8000
-                        tcp_sock.sendall(sync_signal + data.tobytes())
-
-            except Exception as e:
-                print(f"TCP connection error: {e}")
+            global multiline_data_request
+            multiline_data_request = (line_number, control_register)
 
 
 def start_tcp_server():
@@ -135,41 +130,41 @@ def start_tcp_server():
     tcp_sock.listen(1)
     print("Mock TCP server started on port 556")
 
+    global multiline_data_request
+    multiline_data_request = None
+
     while True:
         conn, addr = tcp_sock.accept()
-        print(f"Accepted connection from {addr}")
+        print(f"Accepted TCP connection from {addr}")
+        global tcp_connection_active
+        tcp_connection_active = True
 
         try:
             while True:
-                break; # ! DEVELOPMENT
-                command = conn.recv(4)
-                if len(command) < 4:
-                    break
+                if multiline_data_request:
+                    line_number, control_register = multiline_data_request
+                    print(f"Sending {line_number} lines to {addr}")
+                    multiline_data_request = None
 
-                (opcode,) = struct.unpack("<H", command[:2])
-
-                if opcode == CMD_READ_MULTILINE:
-                    params = conn.recv(6)
-                    (frame_count,) = struct.unpack("<I", params[2:])
-
-                    num_pixels = mock_ini_data["num_pixels"]
-                    header = np.array(
-                        [0, 0, 0x8000, 0x8000, 0xABAB, 0xABAB], dtype=np.uint16
-                    )
-                    data = np.concatenate(
-                        (
-                            header,
-                            np.random.randint(
-                                0, 65535, size=num_pixels - len(header), dtype=np.uint16
-                            ),
+                    for _ in range(line_number):
+                        header = np.array(
+                            [0x0000, 0x0000, 0x8000, 0x8000, 0xABAB, 0xABAB],
+                            dtype=np.uint16,
                         )
-                    )
-                    frames = np.tile(data, (frame_count, 1))
+                        data = np.random.randint(
+                            0,
+                            32768,
+                            size=mock_ini_data["num_pixels"] - len(header),
+                            dtype=np.uint16,
+                        )
+                        data |= 0x8000
+                        frame = np.concatenate((header, data))
+                        conn.sendall(frame.tobytes())
+                        sleep(0.1)
 
-                    conn.sendall(frames.tobytes())
-                    sleep(0.05)
+                    print(f"Sent {line_number} frames to {addr}")
 
-        except (ConnectionResetError, BrokenPipeError):
+        except (ConnectionResetError, BrokenPipeError, KeyboardInterrupt):
             print("Connection closed by client")
         finally:
             conn.close()
