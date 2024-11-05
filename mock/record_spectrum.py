@@ -1,10 +1,11 @@
-from pyspectrum_debug import Spectrometer
-from pyspectrum_debug.device_factory import EthernetID
+from pyspectrum import Spectrometer
+from pyspectrum.device_factory import EthernetID, UsbID
 
 
 def run_test():
     # Открываем устройство
-    device = Spectrometer(device_id=EthernetID(ip="127.0.0.1"))
+    device = Spectrometer(device_id=UsbID())
+    # device = Spectrometer(device_id=EthernetID(ip="127.0.0.1"))
 
     # Настройка устройства
     device.set_config(
