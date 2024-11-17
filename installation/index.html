@@ -38,8 +38,8 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"JetBrains Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
     
@@ -226,24 +226,6 @@
           
   
   Примеры
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../dev-docs/develop-environment/" class="md-tabs__link">
-          
-  
-  Документация Разработчика
 
         </a>
       </li>
@@ -533,93 +515,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Документация Разработчика
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5">
-            <span class="md-nav__icon md-icon"></span>
-            Документация Разработчика
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../dev-docs/develop-environment/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Среда Разработки
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../dev-docs/architecture/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Архитектурный обзор
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -685,32 +580,22 @@
 <h2 id="linux">Linux</h2>
 <p>(команды приведены для Ubuntu 22.04 LTS)  </p>
 <ol>
-<li>
-<p>Установить python и pip (минимальная версия - 3.10)  </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3<span class="w"> </span>python3-pip<span class="w"> </span>libxcb-xinerama0
-</span></code></pre></div>
-<p><code>libxcb-xinerama0</code> нужна только для работы демо на Ubuntu<br />
-2. Установить библиотеку  </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="w">  </span>pip<span class="w"> </span>install<span class="w"> </span>vmk-spectrum
-</span></code></pre></div>
-</li>
-<li>
-<p>Изменить права доступа к USB устройству (необходимо для использования библиотеки не из-под root'а)  </p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;SUBSYSTEMS==&quot;usb&quot;, ATTRS{idVendor}==&quot;0403&quot;, ATTRS{idProduct}==&quot;6014&quot;,  MODE=&quot;0666&quot;&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/udev/rules.d/69-spectrometer.rules
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>udevadm<span class="w"> </span>control<span class="w"> </span>--reload
-</span></code></pre></div>
-</li>
+<li>Установить python и pip (минимальная версия - 3.10)<br />
+<code>sudo apt install python3 python3-pip libxcb-xinerama0</code><br />
+<code>libxcb-xinerama0</code> нужна только для работы демо на Ubuntu  </li>
+<li>Установить библиотеку<br />
+<code>pip install vmk-spectrum</code></li>
+<li>Изменить права доступа к USB устройству (необходимо для использования библиотеки не из-под root'а)<br />
+<code>echo 'SUBSYSTEMS=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014",  MODE="0666"' | sudo tee /etc/udev/rules.d/69-spectrometer.rules
+   sudo udevadm control --reload</code></li>
 </ol>
 <h2 id="windows">Windows</h2>
 <ol>
 <li>Установить <a href="https://ftdichip.com/wp-content/uploads/2021/08/CDM212364_Setup.zip">драйвер FTDI</a> (Если на компьютере ранее работал <code>Atom</code>, шаг можно пропустить)</li>
 <li>Установить <a href="https://www.microsoft.com/ru-RU/download/details.aspx?id=48145">Распространяемый пакет Visual C++ для Visual Studio 2015</a></li>
 <li>Установить <strong>64-битный</strong> Python (минимальная версия - 3.10)  </li>
-<li>
-<p>Установить библиотеку  </p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>pip install vmk-spectrum
-</span></code></pre></div>
-</li>
+<li>Установить библиотеку<br />
+<code>pip install vmk-spectrum</code>  </li>
 </ol>
 
 
