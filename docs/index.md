@@ -3,18 +3,11 @@ hide:
 - navigation
 ---
 # Pyspectrum
-
-[Установка библиотеки](installation.md)  
-[Документация API](reference.md)
+[Установка библиотеки](installation)  
+[Документация API](reference)
 
 ## Примеры
-
-[Чтение спектра и сохранение данных в файл](examples/record_spectrum.ipynb)  
-[Пирометр](examples/pyrometer.ipynb)
-[Характеристики ламп](examples/led_parameters.ipynb)
-[Колориметр](examples/colorimeter.ipynb)
-
-## Документация Разработчика
-
-[Среда разработки](dev-docs/develop-environment.md)
-[Архитектурнынй обзор](dev-docs/architecture.md)
+[Чтение спектра и сохранение данных в файл](examples/record_spectrum)  
+[Пирометр](examples/pyrometer)   
+[Характеристики ламп](examples/led_parameters)   
+[Колориметр](examples/colorimeter)   
