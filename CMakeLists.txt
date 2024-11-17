@@ -11,7 +11,7 @@ pybind11_add_module(${PYMODULE_NAME})
 if(WIN32)
   include(ExternalProject)
   ExternalProject_Add(d2xx
-    URL https://www.ftdichip.com/Drivers/CDM/CDM%20v2.12.36.4%20WHQL%20Certified.zip
+    URL https://ftdichip.com/wp-content/uploads/2023/09/CDM-v2.12.36.4-WHQL-Certified.zip
     SOURCE_DIR thirdparty/ftd2xx
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
