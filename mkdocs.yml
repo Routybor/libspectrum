@@ -4,6 +4,7 @@ theme:
   features:
     - navigation.instant
     - navigation.tabs
+    - content.code.copy
   font:
     code: JetBrains Mono
 site_dir: docs_generated
