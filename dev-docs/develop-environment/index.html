@@ -710,7 +710,7 @@
 <p>Наиболее простой способ собрать и протестировать библиотеку — использовать предварительно сконфигурированный Docker контейнер.</p>
 <p><a href="https://hub.docker.com/repository/docker/ensell84/python-driver-dev/general">Docker контейнер на Docker Hub</a></p>
 <p>Контейнер содержит virtual environment со всеми необходимыми зависимостями для сборки.</p>
-<p>Этот контейнер полностью воспроизводит pipeline для автоматизации, используемый в GitHub репозитории для публикации библиотеки в pip репозитории.</p>
+<p>Этот контейнер полностью воспроизводит pipeline в GitHub workflow.</p>
 <p>Находясь в директории с проектом просто запускаем контейнер:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>run<span class="w"> </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>:/work<span class="w"> </span>-it<span class="w"> </span>--rm<span class="w"> </span>ensell84/python-driver-dev
 </span></code></pre></div>
@@ -726,7 +726,7 @@
 <p>Для сборки на Ubuntu необходимо установить следующие зависимости:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>libftdipp1-dev<span class="w"> </span>libusb-1.0-0-dev<span class="w"> </span>libboost-dev
 </span></code></pre></div>
-<p>Также очевидно, в системе должен быть установлен <code>python</code>:</p>
+<p>Также в системе должен быть установлен <code>python</code>:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>python3<span class="w"> </span>python3-venv<span class="w"> </span>python3-dev
 </span></code></pre></div>
 <p>Важно установить <code>python3-dev</code>, без него библиотека не соберется.</p>
@@ -748,7 +748,7 @@
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>pip<span class="w"> </span>install<span class="w"> </span>.
 </span></code></pre></div>
 <p>Все необходимые pip зависимости будут автоматически скачаны и установлены.</p>
-<p>Или для сборки wheel бинарника:</p>
+<p>Если требуется сборка wheel бинарника:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>wheel<span class="w"> </span>.
 </span></code></pre></div>
 <h2 id="windows">Разработка на ОС Windows</h2>
@@ -799,7 +799,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tabs", "content.code.copy"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
