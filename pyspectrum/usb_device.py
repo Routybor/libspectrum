@@ -1,7 +1,7 @@
 import numpy as np
 from .usb_context import UsbContext
 from .data import Data
-import struct
+import time
 
 CMD_CODE_WRITE_CR = 0x01
 CMD_CODE_WRITE_TIMER = 0x02
@@ -139,3 +139,24 @@ class UsbDevice:
         
         command_data = millis | (exponent << 16)
         self._send_command(CMD_CODE_WRITE_TIMER, command_data)
+
+    def _read_exact(self, amount: int) -> bytes:
+        """
+        Читаем точное количество байт с USB устройства.
+
+        Params:
+            amount (int): кол-во байт на чтение
+        """
+        buffer = bytearray(amount)
+        data_read = 0
+
+        last_successful_read = time.monotonic_ns()
+        while data_read < amount:
+            chunk = self.context.read(amount - data_read)
+            buffer[data_read:data_read+len(chunk)] = chunk
+            data_read += len(chunk)
+
+            current_time = time.monotonic_ns()
+            if (current_time - last_successful_read > self._read_timeout * 1_000_000):
+                raise RuntimeError("Device read timeout")
+        return bytes(buffer)
