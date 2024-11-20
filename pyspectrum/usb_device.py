@@ -121,7 +121,7 @@ class UsbDevice:
             Мантиса таймера - 10 бит
             Экспонента таймера - 2 бита
 
-        Структура данных пакета:
+        Структура данных пакета команды:
             `DATA[0]` = мантисса, младший байт
             `DATA[1]` = мантисса, старший байт
             `DATA[2]` = экспонента
@@ -160,3 +160,35 @@ class UsbDevice:
             if (current_time - last_successful_read > self._read_timeout * 1_000_000):
                 raise RuntimeError("Device read timeout")
         return bytes(buffer)
+
+    def _read_data(self, amount: int) -> bytes:
+        """
+        Читаем данные, получаемые от USB устройства в пакетах данных (DAT)
+
+        Извлекаем только `DATA` часть из каждого пакета с данными.
+
+        Params:
+            amount (int): кол-во байт на чтение
+
+        ### Структура пакета данных:
+            `[ #DAT | DATA_LENGTH | DATA ]`
+            `DATA_LENGTH` - 2 байта (значение всегда четное)
+            `DATA` - минимум 400 байт (кроме последнего пакета)
+        """
+        buffer = bytearray(amount)
+        data_read = 0
+
+        while data_read < amount:
+            header = self._read_exact(6)
+            if header[:4] != b'#DAT':
+                raise RuntimeError("Received bad #DAT magic from device")
+            
+            length = int.from_bytes(header[4:6], byteorder="little")
+            if length > (amount - data_read):
+                raise ValueError("Trying to read more data than expected")
+            
+            buffer[data_read:data_read+length] = self._read_exact(length)
+            data_read += length
+        
+        return bytes(buffer)
+    
