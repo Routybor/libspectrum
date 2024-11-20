@@ -1,6 +1,7 @@
 import numpy as np
 from .usb_context import UsbContext
 from .data import Data
+import struct
 
 CMD_CODE_WRITE_CR = 0x01
 CMD_CODE_WRITE_TIMER = 0x02
@@ -13,15 +14,14 @@ CMD_SUCCESS = 0x2B
 CMD_FAILURE = 0x2D
 CMD_UNKNOWN = 0x3F
 
-class UsbRawSpectrometer:
+class UsbDevice:
     def __init__(self, vendor: int, product: int, serial: str, read_timeout: int):
         """
-        Initializes UsbDevice and opens the USB device.
-
-        :param vendor: USB vendor ID
-        :param product: USB product ID
-        :param serial: USB serial number (optional)
-        :param read_timeout: Timeout for read operations (in milliseconds)
+        Params:
+            vendor (int): USB vendor ID
+            product (int): USB product ID
+            serial (str): USB serial number (optional)
+            read_timeout (int): Timeout for read operations (in milliseconds)
         """
         self.context = UsbContext()
         self._read_timeout = read_timeout
@@ -53,27 +53,28 @@ class UsbRawSpectrometer:
         """Returns pixel number"""
         return self._pixel_number
 
-    def _send_command(self, code: int, data: int) -> bytearray[10]:
+    def _send_command(self, code: int, data: int) -> bytes[10]:
         """
-        Sends a command to the USB device and handles the response.
+        Отправляет команду USB устройству и обрабатывает ответ
 
-        ### Structure of command packet:
-            `[ #CMD | CMD_CODE | CMD_LENGTH = 4 | SEQ_NUMBER | DATA]`
-            `DATA` lenght is specifyed by `CMD_LENGTH` ( <=4, but we always send 4)
-            `SEQ_NUMBER` - 2 bytes
-            total: 12 bytes long
+        ### Структура пакета команды:
+            `[ #CMD | CMD_CODE | CMD_LENGTH = 4 | SEQ_NUMBER | DATA ]`
+            Длинна `DATA` определяется `CMD_LENGTH` ( <=4, мы всегда отправляем 4)
+            `SEQ_NUMBER` - 2 байта
+            всего: 12 байт
 
-        ### Structure of answer packet:
-            `[ #ANS | ANS_CODE | ANS_LENGTH = 2 | SEQ_NUMBER | DATA]`
-            Recieved `SEQ_NUMBER` is unchanged from sent command packet
+        ### Структура пакета ответа:
+            `[ #ANS | ANS_CODE | ANS_LENGTH = 2 | SEQ_NUMBER | DATA ]`
+            Полученый `SEQ_NUMBER` возвращается в ответе на посланную команду в неизменном виде.
             `ANS_CODE = CMD_SUCCESS | CMD_FALIURE | CMD_UNKNOWN`
-            total: 10 bytes long
-            
-        :param  code (int): Command code(`CMD_CODE`) to send.
-        :param  data (int): Associated data(`DATA`) to send (4 bytes).
+            всего: 10 байт
+        
+        Params:
+            code (int): Код команды(`CMD_CODE`)
+            data (int): Данные для посылки(`DATA`), мы посылаем 4 байта
 
         Returns:
-            bytearray: The 10-byte answer packet from the device.
+            bytes: 10-байтовый пакет ответа
         """
         command = bytearray(12)
         command[:4] = b"#CMD"
@@ -81,11 +82,12 @@ class UsbRawSpectrometer:
         command[5] = 4
         command[6:8] = self._sequence_number.to_bytes(2, byteorder="little")
         command[8:12] = data.to_bytes(4, byteorder="little")
-        self.context.write(command)
+
+        self.context.write(bytes(command))
 
         ans = self._read_exact(10)
 
-        if ans[:4] != b"#ANS":
+        if ans[:4] != b'#ANS':
             raise RuntimeError(f"Received bad answer magic: {ans[:4]}")
         elif ans[6:8] != self._sequence_number.to_bytes(2, byteorder="little"):
             raise RuntimeError(
@@ -103,3 +105,37 @@ class UsbRawSpectrometer:
         return ans
         
         #TODO: implement handling of commands failure (retry mechanism)
+
+    def setTimer(self, millis: int):
+        """
+        Выставляет продолжительность единичного кадра (накопления) - время базовой экспозиции `τ`
+
+        Params:
+            millis (int): время базовой экспозиции в мс
+
+        Базовое время экспозиции определяется из мантиссы и экспоненты таймера как:
+
+        `τ = 0.1 ms * mant * 10 ^ exp`
+
+        Размеры мантиссы и экспоненты:
+            Мантиса таймера - 10 бит
+            Экспонента таймера - 2 бита
+
+        Структура данных пакета:
+            `DATA[0]` = мантисса, младший байт
+            `DATA[1]` = мантисса, старший байт
+            `DATA[2]` = экспонента
+            `DATA[3]` = 0 
+
+        Поле `ANS_DATA` в ответе содержит 0.
+        """
+        millis *= 10
+        exponent = 0
+        while millis >= (1 << 10):
+            exponent += 1
+            millis //= 10
+        if exponent >= 4:
+            raise ValueError("Exposure too large")
+        
+        command_data = millis | (exponent << 16)
+        self._send_command(CMD_CODE_WRITE_TIMER, command_data)
