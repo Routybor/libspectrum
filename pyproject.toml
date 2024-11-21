@@ -1,16 +1,11 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "ninja",
-    "cmake>=3.12",
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocstrings",
-    "mkdocstrings[python]",
-    "mkdocs-jupyter",
-]
+requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.mkdocs]
+site_name = "Pyspectrum documentation"
+theme = "material"
+plugins = ["mkdocstrings", "mkdocs-jupyter"]
 
 [tool.isort]
 profile = "black"
