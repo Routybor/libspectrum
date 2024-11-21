@@ -3,6 +3,7 @@ import struct
 from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
+from data import Frame
 
 CMD_READ_INI            = 0x800B
 CMD_READ_ASSEMBLY_SWAP  = 0x8013
@@ -30,12 +31,6 @@ class EthernetDeviceIni:
     mui0: float
     dia_present: bool
     thermostat_enabled: bool
-
-
-@dataclass()
-class EthernetFrame:
-    samples: NDArray
-    clipped: NDArray
 
 
 class EthernetDevice:
@@ -90,7 +85,7 @@ class EthernetDevice:
 
         samples = arr[:, header_len:].astype('int32')
         # TODO: clipped support
-        return EthernetFrame(samples, np.zeros(samples.shape))
+        return Frame(samples=samples, clipped=np.zeros(samples.shape))
 
     # internal stuff
     def send_command(self, opcode, data=b'', ext_packets=0, pad_to=16):

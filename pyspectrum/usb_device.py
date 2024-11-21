@@ -1,6 +1,6 @@
 import numpy as np
+from data import Frame
 from .usb_context import UsbContext
-from .data import Data
 import time
 
 CMD_CODE_WRITE_CR = 0x01
@@ -163,9 +163,9 @@ class UsbDevice:
 
     def _read_data(self, amount: int) -> bytes:
         """
-        Читаем данные, получаемые от USB устройства в пакетах данных (DAT)
+        Читает данные, получаемые от USB устройства в пакетах данных (DAT)
 
-        Извлекаем только `DATA` часть из каждого пакета с данными.
+        Извлекает только `DATA` часть из каждого пакета с данными.
 
         Params:
             amount (int): кол-во байт на чтение
@@ -191,4 +191,33 @@ class UsbDevice:
             data_read += length
         
         return bytes(buffer)
-    
+
+    def readFrame(self, n_times: int) -> Frame:
+        """
+        Читает кадр спектральных данных с USB спектрометра.
+
+        Один кадр состоит из `lineNumber` накоплений/линий.
+
+        Каждое накопление/линия в свою очередь состоит из `pixelNumber` пикселей в гибридной сборке фотодетекторов.
+            `pixelNumber` - устанавливается командой `CMD_CODE_WRITE_PIXEL_NUMBER`
+            каждый пиксель - 2 байта
+            каждый кадр = `pixelNumber * lineNumber * 2 байт`
+        
+        Params:
+            n_times (int): кол-во накоплений/линий (4 байта `DATA` поля команды)
+
+        Returns:
+            Frame: объект кадра
+        """
+        pixel_count = self.get_pixel_count()
+        total_samples = pixel_count * n_times
+
+        self._send_command(CMD_CODE_READ_FRAME, n_times)
+        data = self._read_data(total_samples * 2)
+
+        data_array = np.frombuffer(data, dtype=np.uint16)
+        samples = data_array.reshape((n_times, pixel_count))
+        samples = samples ^ (1 << 15)
+        clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
+
+        return Frame(samples=samples, clipped=clipped)  
