@@ -72,15 +72,10 @@ jobs:
           python -m pip install pytest
       
       - name: Install artifact
-        run: |
-          python -m venv venv
-          source venv/bin/activate || venv\Scripts\activate
-          pip install artifacts/*.whl
+        run: pip install artifacts/*.whl
 
       - name: Run tests
-        run: |
-          source venv/bin/activate || venv\Scripts\activate
-          pytest tests/
+        run: pytest tests/
 
 #   upload-docs:
 #     if: ${{github.ref == 'refs/heads/master'}}
