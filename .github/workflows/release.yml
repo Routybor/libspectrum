@@ -52,15 +52,6 @@ jobs:
 
     - uses: RalfG/python-wheels-manylinux-build@v0.5.0
       with:
-        pre-build-command: |
-          curl -O https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.4.tar.bz2
-          && tar -xf libftdi1-1.4.tar.bz2
-          && mkdir libftdi1-1.4/build
-          && cd libftdi1-1.4/build
-          && cmake -DCMAKE_INSTALL_PREFIX=/usr ..
-          && make
-          && make install
-          && cd ../..
         python-versions: ${{matrix.pep-425-tag}}
     
     - uses: kittaakos/upload-artifact-as-is@v0
