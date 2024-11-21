@@ -17,10 +17,5 @@ setup(
         "scipy",
         "pylibftdi",
         "ftd2xx",
-    ],
-    entry_points={
-        'console_scripts': [
-            'your_command=your_package.module:main_function',
-        ],
-    },
+    ]
 )

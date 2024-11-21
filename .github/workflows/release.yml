@@ -8,55 +8,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     strategy:
       fail-fast: false
       matrix:
         include:
           - python-version: '3.10'
-            pep-425-tag: 'cp310-cp310'
           - python-version: '3.11'
-            pep-425-tag: 'cp311-cp311'
-
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v2.3.3
-      with:
-        python-version: ${{matrix.python-version}}
-
-    - run: python -m pip install cibuildwheel
-    - run: cibuildwheel --output-dir dist
-    
-    - uses: kittaakos/upload-artifact-as-is@v0
-      with:
-        path: ${{github.workspace}}/vmk_spectrum-*.whl
-
-  build-linux:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - python-version: '3.10'
-            pep-425-tag: 'cp310-cp310'
-          - python-version: '3.11'
-            pep-425-tag: 'cp311-cp311'
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v2.3.3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{matrix.python-version}}
 
-    - run: python -m pip install cibuildwheel
-    - run: cibuildwheel --output-dir dist
-    
-    - uses: kittaakos/upload-artifact-as-is@v0
+    - name: Install build tools
+      run: python -m pip install --upgrade pip build
+
+    - name: Build wheel and sdist
+      run: python -m build --sdist --wheel --outdir dist
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
       with:
-        path: ${{github.workspace}}/dist/vmk_spectrum-*-manylinux*.whl
+        name: vmk-spectrum-${{matrix.python-version}}
+        path: dist/*
 
 #   upload-docs:
 #     if: ${{github.ref == 'refs/heads/master'}}
