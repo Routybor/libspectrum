@@ -76,6 +76,23 @@ jobs:
         run: Get-ChildItem -Path artifacts -Filter *.whl | ForEach-Object { pip install $_.FullName }
         shell: pwsh
 
+      - name: Download D2XX (Windows)
+        if: matrix.os == 'windows-latest'
+        run: curl -o ftdi.zip -L https://ftdichip.com/wp-content/uploads/2023/09/CDM-v2.12.36.4-WHQL-Certified.zip
+        shell: pwsh
+
+      - name: Extract D2XX (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Expand-Archive -Path ftdi.zip -DestinationPath ftdi
+        shell: pwsh
+
+      - name: Install D2XX to PATH (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+            Copy-Item -Path ftdi/amd64/ftd2xx64.dll -Destination $Env:SystemRoot\System32
+            Copy-Item -Path ftdi/i386/ftd2xx.dll -Destination $Env:SystemRoot\SysWOW64
+        shell: pwsh
+
       - name: Install artifact (Unix)
         if: matrix.os != 'windows-latest'
         run: pip install artifacts/*.whl
