@@ -1,6 +1,9 @@
 import platform
-import ftd2xx as ftd
-import pylibftdi as ftdi
+
+if platform.system() == "Windows":
+    import ftd2xx as ftd
+else:
+    import pylibftdi as ftdi
 
 
 class UsbContext:

@@ -2,8 +2,8 @@ from dataclasses import dataclass, field
 from typing import Any
 from abc import ABC, abstractmethod
 
-import _pyspectrum as internal
 from .ethernet_device import EthernetDevice
+from .usb_device import UsbDevice
 
 
 class DeviceID(ABC):
@@ -25,7 +25,7 @@ class UsbID(DeviceID):
     read_timeout: int = field(default=10_000, compare=False)
 
     def _create(self):
-        return internal.UsbRawSpectrometer(self.vid, self.pid, self.serial, self.read_timeout)
+        return UsbDevice(self.vid, self.pid, self.serial, self.read_timeout)
 
 
 @dataclass(unsafe_hash=True)

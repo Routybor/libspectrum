@@ -2,8 +2,7 @@ from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM, MSG_WAITALL
 import struct
 from dataclasses import dataclass
 import numpy as np
-from numpy.typing import NDArray
-from data import Frame
+from .data import Frame
 
 CMD_READ_INI            = 0x800B
 CMD_READ_ASSEMBLY_SWAP  = 0x8013

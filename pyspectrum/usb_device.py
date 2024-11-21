@@ -1,5 +1,5 @@
 import numpy as np
-from data import Frame
+from .data import Frame
 from .usb_context import UsbContext
 import time
 
@@ -53,7 +53,7 @@ class UsbDevice:
         """Returns pixel number"""
         return self._pixel_number
 
-    def _send_command(self, code: int, data: int) -> bytes[10]:
+    def _send_command(self, code: int, data: int) -> bytes:
         """
         Отправляет команду USB устройству и обрабатывает ответ
 
