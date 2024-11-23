@@ -38,21 +38,22 @@ class UsbDevice:
         self._send_command(CMD_CODE_WRITE_TIMER, 0x03e8)
         self._send_command(CMD_CODE_WRITE_PIXEL_NUMBER, self._pixel_number)
 
-        self.opened: bool = True
+        self._opened: bool = True
 
     def close(self):
         """Закрывает соединение с USB Спектрометром."""
-        if not self.opened:
+        if not self._opened:
             raise RuntimeError("Device is not opened.")
         self.context.close()
-        self.opened = False
+        self._opened = False
 
+    @property
     def isOpened(self) -> bool:
         """
         :return: True если USB Device открыт для работы
         :rtype: bool
         """
-        return self.opened
+        return self._opened
 
     def get_pixel_count(self) -> int:
         """

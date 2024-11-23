@@ -21,6 +21,23 @@ UDP_BUFFER_SIZE = 65536
 
 @dataclass
 class EthernetDeviceIni:
+    """
+    Информация о содержании конфигурационного файла устройства.
+
+    Attributes:
+        num_chips: общее количество кристаллов в сборке принимает значения от 1 до 255
+        num_pixels_per_chip: количество фоточувствительных пикселей единичного кристалла сборки
+        chip_type: тип кристалла, коды приведены в таблице
+        adc_rate: период оцифровки АЦП
+        config_bits: флаги 8 бит, конфигурирующие режим управления многоэлементными фотодетекторами
+        assembly_type: способ построения сборки
+        min_exposure: минимальное время экспозиции
+        num_pixels: суммарное количество пикселей при чтении всех фотодетекторов гибридной сборки
+        mtr0: требуемая температура радиатора в градусах Цельсия, значение пишется во float 32-бит, big-endian
+        mui0: напряжение сигнала Ui0 в вольтах
+        dia_present: флаг наличия записанной диаграммы. При наличие, равен 0xAB
+        thermostat_enabled: флаг включенного термостата(стабилизации температуры радиатора на значении mTr0). Во включенном состоянии, равен 0xAB
+    """
     num_chips: int
     num_pixels_per_chip: int
     chip_type: int
@@ -46,16 +63,16 @@ class EthernetDevice:
         """
         :param str addr: IP адресс устройства
         """
-        self.device_addr = addr
-        self.seq_number = 1
+        self._device_addr = addr
+        self._seq_number = 1
 
         self.udp_sock = socket(AF_INET, SOCK_DGRAM)
         self.tcp_sock = socket(AF_INET, SOCK_STREAM)
         self.tcp_sock.connect((addr, TCP_PORT))
 
-        self.ini = self._read_ini()
+        self._ini = self._read_ini()
 
-        self.opened = True
+        self._opened = True
 
     def close(self):
         """ Закрывает TCP и UDP сокеты """
@@ -68,7 +85,7 @@ class EthernetDevice:
         :return: True если со открыт для работы
         :rtype: bool
         """
-        return self.opened
+        return self._opened
 
     def _send_command(self, opcode, data=b'', ext_packets=0, pad_to=16):
         """
@@ -79,7 +96,7 @@ class EthernetDevice:
         :param int ext_packets: Кол-во доп. пакетов для ожидания (по умолчанию 0)
         :param int pad_to: Размер padding-а (по умолчанию 16 байт)
 
-        :return: Response payloads
+        :return: список из (1 + ext_packets)  `RESP_DATA` частей ответных пакетов
         :rtype: list[bytes]
 
         Алгоритм работы Устройства:
@@ -102,11 +119,11 @@ class EthernetDevice:
         На ряд команд Устройство помимо пакета с ответом отправляет дополнительные пакеты.
         Такие пакеты имеют структуру аналогичную пакету ответа, но `RESP_OPCODE` = `UDP_EXT`.
         """
-        packet = struct.pack('<HH', opcode, self.seq_number)
+        packet = struct.pack('<HH', opcode, self._seq_number)
         packet += data
         packet += bytes([0]*(pad_to-4-len(data)))
 
-        self.udp_sock.sendto(packet, (self.device_addr, UDP_PORT))
+        self.udp_sock.sendto(packet, (self._device_addr, UDP_PORT))
 
         response_data = []
 
@@ -114,8 +131,8 @@ class EthernetDevice:
             response = self.udp_sock.recvfrom(UDP_BUFFER_SIZE)[0]
             resp_opcode, ans_opcode, resp_seq_num = struct.unpack('<H2xHH', response[:8])
 
-            if resp_seq_num != self.seq_number:
-                raise Exception(f"Response sequence number mismatch: expected {self.seq_number}, got {resp_seq_num}")
+            if resp_seq_num != self._seq_number:
+                raise Exception(f"Response sequence number mismatch: expected {self._seq_number}, got {resp_seq_num}")
             if ans_opcode != opcode:
                 raise Exception(f"Response opcode mismatch: expected {opcode}, got {resp_opcode}")
             if resp_opcode > 2:
@@ -123,7 +140,7 @@ class EthernetDevice:
 
             response_data.append(response[8:])
 
-        self.seq_number = (self.seq_number + 1) & 0xFFFF # stay in 16 bits range
+        self._seq_number = (self._seq_number + 1) & 0xFFFF # stay in 16 bits range
         return response_data
 
     def setTimer(self, millis: int):
@@ -140,8 +157,8 @@ class EthernetDevice:
             Мантиса таймера - 10 бит
             Экспонента таймера - 2 бита
         """
-        if millis < self.ini.min_exposure:
-            raise Exception(f'Exposure too low, minimal is {self.ini.min_exposure}')
+        if millis < self._ini.min_exposure:
+            raise Exception(f'Exposure too low, minimal is {self._ini.min_exposure}')
 
         millis *= 10
         exponent = 0
@@ -157,7 +174,7 @@ class EthernetDevice:
         )
 
     def readFrame(self, n_times):
-        ini = self.ini
+        ini = self._ini
         self._set_line_length(ini.num_pixels, ini.num_chips)
         arr = np.empty((n_times, ini.num_pixels), dtype=np.uint16)
         self._send_command(CMD_READ_MULTILINE, struct.pack('<H2xI', 0, n_times))
@@ -173,6 +190,12 @@ class EthernetDevice:
         return Frame(samples=samples, clipped=np.zeros(samples.shape))
 
     def _read_ini(self) -> EthernetDeviceIni:
+        """
+        Прочитать конфигурацию устройства.
+
+        :return: Конфигурация устройства
+        :rtype: EthernetDeviceIni
+        """
         data = self._send_command(CMD_READ_INI, data=bytes([0]), ext_packets=1)[1]
         chips_num, chip_pixel_num, chip_type, adc_rate, config_bits, assembly_type, min_exposure_value, min_exposure_exponent, pixel_number, dia_present, termostat_en, temp0, v0 = struct.unpack('<B3xHHBBxBHHIBBff', data[:30])
         return EthernetDeviceIni(
@@ -190,7 +213,18 @@ class EthernetDevice:
             thermostat_enabled=(termostat_en == 0xAB),
         )
 
-    def _set_line_length(self, num_pixels, num_chips):
+    def _set_line_length(self, num_pixels: int, num_chips: int):
+        """
+        Позволяет конфигурировать количество опрашиваемых фотодетекторов в гибридной
+        сборке фотодетекторов и количество опрашиваемых пикселей для каждого из фотодетекторов.
+
+        :param int num_pixels: суммарное количество пикселей при чтении всех фотодетекторов гибридной сборки (4 байта)
+        :param int num_chips: количество опрашиваемых фотодетекторов (кол-во линеек фотодиодов) (2 байта)
+
+        Если отправить команду со значением num_chips или num_pixels равным 0, то
+        при выполнении команды возьмутся стандартные значения для данной сборки фотодетекторов,
+        хранящиеся в конфигурационном файле Устройства.
+        """
         self._send_command(
             CMD_SET_LINE_LENGTH,
             struct.pack('<IH', num_pixels, num_chips)
