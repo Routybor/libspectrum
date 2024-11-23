@@ -23,7 +23,7 @@ class UsbDevice:
         :param int vendor: USB vendor ID
         :param int product: USB product ID
         :param str serial: USB serial number (optional)
-        :param int read_timeout: Timeout for read operations (in milliseconds)
+        :param int read_timeout: Timeout для операций чтения (в миллисекундах)
         """
         self.context = UsbContext()
         self._read_timeout = read_timeout
@@ -41,41 +41,47 @@ class UsbDevice:
         self.opened: bool = True
 
     def close(self):
-        """Closes the USB spectrometer device."""
+        """Закрывает соединение с USB Спектрометром."""
         if not self.opened:
             raise RuntimeError("Device is not opened.")
         self.context.close()
         self.opened = False
 
     def isOpened(self) -> bool:
-        """True if USB Device is open"""
+        """
+        :return: True если USB Device открыт для работы
+        :rtype: bool
+        """
         return self.opened
 
     def get_pixel_count(self) -> int:
-        """Returns pixel number"""
+        """
+        :return: Кол-во пикселей
+        :rtype: int
+        """
         return self._pixel_number
 
     def _send_command(self, code: int, data: int) -> bytes:
         """
         Отправляет команду USB устройству и обрабатывает ответ
 
-        ### Структура пакета команды:
-            `[ #CMD | CMD_CODE | CMD_LENGTH = 4 | SEQ_NUMBER | DATA ]`
-            Длинна `DATA` определяется `CMD_LENGTH` ( <=4, мы всегда отправляем 4)
-            `SEQ_NUMBER` - 2 байта
-            всего: 12 байт
-
-        ### Структура пакета ответа:
-            `[ #ANS | ANS_CODE | ANS_LENGTH = 2 | SEQ_NUMBER | DATA ]`
-            Полученый `SEQ_NUMBER` возвращается в ответе на посланную команду в неизменном виде.
-            `ANS_CODE = CMD_SUCCESS | CMD_FALIURE | CMD_UNKNOWN`
-            всего: 10 байт
-
         :param int code: Код команды(`CMD_CODE`)
         :param int data: Данные для посылки(`DATA`), мы посылаем 4 байта
 
         :return: 10-байтовый пакет ответа
         :rtype: bytes
+
+        Структура пакета команды:
+        - `[ #CMD | CMD_CODE | CMD_LENGTH = 4 | SEQ_NUMBER | DATA ]`
+        - Длинна `DATA` определяется `CMD_LENGTH` ( <=4, мы всегда отправляем 4)
+        - `SEQ_NUMBER` - 2 байта
+        - всего: 12 байт
+
+        Структура пакета ответа:
+        - `[ #ANS | ANS_CODE | ANS_LENGTH = 2 | SEQ_NUMBER | DATA ]`
+        - Полученый `SEQ_NUMBER` возвращается в ответе на посланную команду в неизменном виде.
+        - `ANS_CODE = CMD_SUCCESS | CMD_FALIURE | CMD_UNKNOWN`
+        - всего: 10 байт
         """
 
         command = struct.pack('<4sBBH4s',
@@ -124,10 +130,10 @@ class UsbDevice:
             Экспонента таймера - 2 бита
 
         Структура данных пакета команды:
-            `DATA[0]` = мантисса, младший байт
-            `DATA[1]` = мантисса, старший байт
-            `DATA[2]` = экспонента
-            `DATA[3]` = 0
+        - `DATA[0]` = мантисса, младший байт
+        - `DATA[1]` = мантисса, старший байт
+        - `DATA[2]` = экспонента
+        - `DATA[3]` = 0
 
         Поле `ANS_DATA` в ответе содержит 0.
         """
@@ -167,13 +173,13 @@ class UsbDevice:
         Читает данные, получаемые от USB устройства в пакетах данных (DAT).
 
         Извлекает только `DATA` часть из каждого пакета с данными.
-        
-        ### Структура пакета данных:
-            `[ #DAT | DATA_LENGTH | DATA ]`
-            `DATA_LENGTH` - 2 байта (значение всегда четное)
-            `DATA` - минимум 400 байт (кроме последнего пакета)
 
         :param int amount: кол-во байт на чтение
+
+        Структура пакета данных:
+        - `[ #DAT | DATA_LENGTH | DATA ]`
+        - `DATA_LENGTH` - 2 байта (значение всегда четное)
+        - `DATA` - минимум 400 байт (кроме последнего пакета)
         """
         buffer = bytearray(amount)
         data_read = 0
@@ -197,17 +203,17 @@ class UsbDevice:
         """
         Читает кадр спектральных данных с USB спектрометра.
 
-        Один кадр состоит из `lineNumber` накоплений/линий.
-
-        Каждое накопление/линия в свою очередь состоит из `pixelNumber` пикселей в гибридной сборке фотодетекторов.
-            `pixelNumber` - устанавливается командой `CMD_CODE_WRITE_PIXEL_NUMBER`
-            каждый пиксель - 2 байта
-            каждый кадр = `pixelNumber * lineNumber * 2 байт`
-
         :param int n_times: кол-во накоплений/линий (4 байта `DATA` поля команды)
 
         :return: Объект кадра
         :rtype: Frame
+
+        Один кадр состоит из `lineNumber` накоплений/линий.
+
+        Каждое накопление/линия в свою очередь состоит из `pixelNumber` пикселей в гибридной сборке фотодетекторов.
+        - `pixelNumber` - устанавливается командой `CMD_CODE_WRITE_PIXEL_NUMBER`
+        - каждый пиксель - 2 байта
+        - каждый кадр = `pixelNumber * lineNumber * 2 байт`
         """
         pixel_count = self.get_pixel_count()
         total_samples = pixel_count * n_times
