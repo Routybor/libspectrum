@@ -1,7 +1,9 @@
+import struct
+import time
 import numpy as np
+
 from .data import Frame
 from .usb_context import UsbContext
-import time
 
 CMD_CODE_WRITE_CR = 0x01
 CMD_CODE_WRITE_TIMER = 0x02
@@ -14,14 +16,14 @@ CMD_SUCCESS = 0x2B
 CMD_FAILURE = 0x2D
 CMD_UNKNOWN = 0x3F
 
+
 class UsbDevice:
     def __init__(self, vendor: int, product: int, serial: str, read_timeout: int):
         """
-        Params:
-            vendor (int): USB vendor ID
-            product (int): USB product ID
-            serial (str): USB serial number (optional)
-            read_timeout (int): Timeout for read operations (in milliseconds)
+        :param int vendor: USB vendor ID
+        :param int product: USB product ID
+        :param str serial: USB serial number (optional)
+        :param int read_timeout: Timeout for read operations (in milliseconds)
         """
         self.context = UsbContext()
         self._read_timeout = read_timeout
@@ -68,50 +70,50 @@ class UsbDevice:
             Полученый `SEQ_NUMBER` возвращается в ответе на посланную команду в неизменном виде.
             `ANS_CODE = CMD_SUCCESS | CMD_FALIURE | CMD_UNKNOWN`
             всего: 10 байт
-        
-        Params:
-            code (int): Код команды(`CMD_CODE`)
-            data (int): Данные для посылки(`DATA`), мы посылаем 4 байта
 
-        Returns:
-            bytes: 10-байтовый пакет ответа
+        :param int code: Код команды(`CMD_CODE`)
+        :param int data: Данные для посылки(`DATA`), мы посылаем 4 байта
+
+        :return: 10-байтовый пакет ответа
+        :rtype: bytes
         """
-        command = bytearray(12)
-        command[:4] = b"#CMD"
-        command[4] = code
-        command[5] = 4
-        command[6:8] = self._sequence_number.to_bytes(2, byteorder="little")
-        command[8:12] = data.to_bytes(4, byteorder="little")
+
+        command = struct.pack('<4sBBH4s',
+                            b'#CMD',
+                            code,
+                            4,
+                            self._sequence_number,
+                            data.to_bytes(4, byteorder="little"))
 
         self.context.write(bytes(command))
-
         ans = self._read_exact(10)
 
-        if ans[:4] != b'#ANS':
-            raise RuntimeError(f"Received bad answer magic: {ans[:4]}")
-        elif ans[6:8] != self._sequence_number.to_bytes(2, byteorder="little"):
+        magic, ans_code, _, seq_number, _ = struct.unpack('<4sBBH2s', ans)
+
+        if magic != b'#ANS':
+            raise RuntimeError(f"Received bad answer magic: {magic}")
+        elif seq_number != self._sequence_number:
             raise RuntimeError(
                 f"SEQ_NUMBER number mismatch: sent {self._sequence_number}, "
-                f"received {int.from_bytes(ans[6:8], byteorder='little')}"
+                f"received {seq_number}"
             )
-        elif ans[4] == CMD_FAILURE:
-            raise RuntimeError(f"Command was not completed")
-        elif ans[4] == CMD_UNKNOWN:
+        elif ans_code == CMD_FAILURE:
+            raise RuntimeError("Command was not completed")
+        elif ans_code == CMD_UNKNOWN:
             raise RuntimeError(f"Unknown command: {code}")
-        elif ans[4] != CMD_SUCCESS:
-            raise RuntimeError(f"Unexpected command status: {ans[4]}")
-        
+        elif ans_code != CMD_SUCCESS:
+            raise RuntimeError(f"Unexpected command status: {ans_code}")
+
         self._sequence_number = (self._sequence_number + 1) & 0xFFFF # stay in 16 bits range
         return ans
-        
-        #TODO: implement handling of commands failure (retry mechanism)
+
+        # TODO: implement handling of commands failure (retry mechanism)
 
     def setTimer(self, millis: int):
         """
         Выставляет продолжительность единичного кадра (накопления) - время базовой экспозиции `τ`
 
-        Params:
-            millis (int): время базовой экспозиции в мс
+        :param int millis: время базовой экспозиции в мс
 
         Базовое время экспозиции определяется из мантиссы и экспоненты таймера как:
 
@@ -125,7 +127,7 @@ class UsbDevice:
             `DATA[0]` = мантисса, младший байт
             `DATA[1]` = мантисса, старший байт
             `DATA[2]` = экспонента
-            `DATA[3]` = 0 
+            `DATA[3]` = 0
 
         Поле `ANS_DATA` в ответе содержит 0.
         """
@@ -136,7 +138,7 @@ class UsbDevice:
             millis //= 10
         if exponent >= 4:
             raise ValueError("Exposure too large")
-        
+
         command_data = millis | (exponent << 16)
         self._send_command(CMD_CODE_WRITE_TIMER, command_data)
 
@@ -144,8 +146,7 @@ class UsbDevice:
         """
         Читаем точное количество байт с USB устройства.
 
-        Params:
-            amount (int): кол-во байт на чтение
+        :param int amount: кол-во байт на чтение
         """
         buffer = bytearray(amount)
         data_read = 0
@@ -163,33 +164,33 @@ class UsbDevice:
 
     def _read_data(self, amount: int) -> bytes:
         """
-        Читает данные, получаемые от USB устройства в пакетах данных (DAT)
+        Читает данные, получаемые от USB устройства в пакетах данных (DAT).
 
         Извлекает только `DATA` часть из каждого пакета с данными.
-
-        Params:
-            amount (int): кол-во байт на чтение
-
+        
         ### Структура пакета данных:
             `[ #DAT | DATA_LENGTH | DATA ]`
             `DATA_LENGTH` - 2 байта (значение всегда четное)
             `DATA` - минимум 400 байт (кроме последнего пакета)
+
+        :param int amount: кол-во байт на чтение
         """
         buffer = bytearray(amount)
         data_read = 0
 
         while data_read < amount:
             header = self._read_exact(6)
-            if header[:4] != b'#DAT':
+            magic, length = struct.unpack('<4sH', header)
+
+            if magic != b'#DAT':
                 raise RuntimeError("Received bad #DAT magic from device")
-            
-            length = int.from_bytes(header[4:6], byteorder="little")
+
             if length > (amount - data_read):
                 raise ValueError("Trying to read more data than expected")
-            
+
             buffer[data_read:data_read+length] = self._read_exact(length)
             data_read += length
-        
+
         return bytes(buffer)
 
     def readFrame(self, n_times: int) -> Frame:
@@ -202,12 +203,11 @@ class UsbDevice:
             `pixelNumber` - устанавливается командой `CMD_CODE_WRITE_PIXEL_NUMBER`
             каждый пиксель - 2 байта
             каждый кадр = `pixelNumber * lineNumber * 2 байт`
-        
-        Params:
-            n_times (int): кол-во накоплений/линий (4 байта `DATA` поля команды)
 
-        Returns:
-            Frame: объект кадра
+        :param int n_times: кол-во накоплений/линий (4 байта `DATA` поля команды)
+
+        :return: Объект кадра
+        :rtype: Frame
         """
         pixel_count = self.get_pixel_count()
         total_samples = pixel_count * n_times
@@ -220,4 +220,4 @@ class UsbDevice:
         samples = samples ^ (1 << 15)
         clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
 
-        return Frame(samples=samples, clipped=clipped)  
+        return Frame(samples=samples, clipped=clipped)

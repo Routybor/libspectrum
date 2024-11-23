@@ -8,7 +8,7 @@ from .usb_device import UsbDevice
 
 class DeviceID(ABC):
     @abstractmethod
-    def _create(self):
+    def _create(self) -> UsbDevice | EthernetDevice:
         pass
 
 
