@@ -173,21 +173,51 @@ class EthernetDevice:
             data=struct.pack('<H2xH', millis, exponent)
         )
 
-    def readFrame(self, n_times):
-        ini = self._ini
-        self._set_line_length(ini.num_pixels, ini.num_chips)
-        arr = np.empty((n_times, ini.num_pixels), dtype=np.uint16)
+    def readFrame(self, n_times: int):
+        """
+        Читает кадр спектральных данных с Ethernet спектрометра.
+
+        :param int n_times: кол-во накоплений/линий (4 байта)
+
+        :return: Объект кадра
+        :rtype: Frame
+
+        Один кадр состоит из `n_times` накоплений/линий.
+
+        Каждое накопление/линия в свою очередь состоит из `pixelNumber` пикселей в гибридной сборке фотодетекторов.
+        - `pixelNumber` - получаем из конфигурации устройства
+        - каждый пиксель - 2 байта
+        - каждый кадр = `pixelNumber * n_times * 2 байт`
+
+        Для выделения в потоке байт, передаваемом посредством TCP соединения, начала
+        накопления, устройство, в начале каждого накопления, перед данными содержащими
+        интенсивности зарегистрированных пикселей, добавляет синхросигнал.
+
+        Хост в потоке данных выделяет синхросигнал, а также расчитывает количество
+        ожидаемых данных (по количеству заказанных накоплений, количеству опрашиваемых линеек и пикселей в них).
+
+        Структура хедера каждого накопления:
+        - `[0, 0, 0x8000, 0x8000, 0xABAB, 0xABAB]` (синхросигнал и 2 dummyPixel)
+        """
+        num_chips = self._ini.num_chips
+        num_pixels = self._ini.num_pixels
+
+        self._set_line_length(num_pixels, num_chips)
+        arr = np.empty((n_times, num_pixels), dtype=np.uint16)
         self._send_command(CMD_READ_MULTILINE, struct.pack('<H2xI', 0, n_times))
-        self.tcp_sock.recv_into(arr, n_times * ini.num_pixels * 2, MSG_WAITALL)
+
+        self.tcp_sock.recv_into(arr, n_times * num_pixels * 2, MSG_WAITALL)
+
         measurement_header = np.array([0, 0, 0x8000, 0x8000, 0xabab, 0xabab])
         header_len = len(measurement_header)
         for i in range(n_times):
             if not np.array_equal(measurement_header, arr[i][:header_len]):
                 raise Exception('Invalid measurement header')
 
-        samples = arr[:, header_len:].astype('int32')
-        # TODO: clipped support
-        return Frame(samples=samples, clipped=np.zeros(samples.shape))
+        samples = arr[:, header_len:]
+        clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
+
+        return Frame(samples=samples, clipped=clipped)
 
     def _read_ini(self) -> EthernetDeviceIni:
         """

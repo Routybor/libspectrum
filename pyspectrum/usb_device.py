@@ -209,12 +209,12 @@ class UsbDevice:
         :return: Объект кадра
         :rtype: Frame
 
-        Один кадр состоит из `lineNumber` накоплений/линий.
+        Один кадр состоит из `n_times` накоплений/линий.
 
         Каждое накопление/линия в свою очередь состоит из `pixelNumber` пикселей в гибридной сборке фотодетекторов.
         - `pixelNumber` - устанавливается командой `CMD_CODE_WRITE_PIXEL_NUMBER`
         - каждый пиксель - 2 байта
-        - каждый кадр = `pixelNumber * lineNumber * 2 байт`
+        - каждый кадр = `pixelNumber * n_times * 2 байт`
         """
         pixel_count = self.get_pixel_count()
         total_samples = pixel_count * n_times
