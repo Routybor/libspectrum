@@ -17,6 +17,10 @@ def _check_slice_key(key):
         return
     raise Exception('Only slices are supported')
 
+@dataclass()
+class Frame:
+    samples: NDArray
+    clipped: NDArray
 
 @dataclass()
 class Data:

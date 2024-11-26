@@ -4,12 +4,16 @@ theme:
   features:
     - navigation.instant
     - navigation.tabs
+    - content.code.copy
+  font:
+    code: JetBrains Mono
 site_dir: docs_generated
 watch:
   - pyspectrum
   - examples
 plugins:
-  - search
+  - search:
+      enabled: true
   - autorefs
   - mkdocs-jupyter:
       include: ["*.ipynb"]
@@ -26,6 +30,15 @@ plugins:
             members_order: "source"
             group_by_category: false
             heading_level: 3
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
 nav:
   - 'index.md'
   - 'installation.md'
@@ -33,3 +46,8 @@ nav:
   - 'Примеры':
       - 'Запись спектра': 'examples/record_spectrum.ipynb'
       - 'Пирометр': 'examples/pyrometer.ipynb'
+      - 'Характеристики ламп': 'examples/led_parameters.ipynb'
+      - 'Колориметр': 'examples/colorimeter.ipynb'
+  - 'Документация Разработчика':
+      - 'Среда Разработки': 'dev-docs/develop-environment.md'
+      - 'Архитектурный обзор': 'dev-docs/architecture.md'

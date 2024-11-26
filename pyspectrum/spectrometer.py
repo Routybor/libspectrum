@@ -3,13 +3,14 @@ import sys
 from dataclasses import dataclass
 from typing import Optional
 
-import _pyspectrum as internal
 import numpy as np
 from numpy.typing import NDArray
 
 from .data import Data, Spectrum
 from .device_factory import DeviceID, create_device
 from .errors import ConfigurationError, LoadError, DeviceClosedError
+from .usb_device import UsbDevice
+from .ethernet_device import EthernetDevice
 
 
 def eprint(*args, **kwargs):
@@ -73,7 +74,7 @@ class Spectrometer:
             device_id: Идентификатор устройства. В настоящий момент поддерживаются UsbID, EthernetID
             factory_config: Заводские настройки
         """
-        self.__device: internal.RawSpectrometer = create_device(device_id, reopen)
+        self.__device: UsbDevice | EthernetDevice = create_device(device_id, reopen)
         self.__factory_config = factory_config
         self.__config = Config()
         self.__device.setTimer(self.__config.exposure)
@@ -154,16 +155,17 @@ class Spectrometer:
         self.__check_opened()
 
         device = self.__device
-        factory_config = self.__factory_config
         config = self.__config
+        start = self.__factory_config.start
+        end = self.__factory_config.end
+        scale = self.__factory_config.intensity_scale
 
-        direction = -1 if factory_config.reverse else 1
+        direction = -1 if self.__factory_config.reverse else 1
         n_times = config.n_times if n_times is None else n_times
 
-        data = device.readFrame(n_times)  # type: internal.RawSpectrum
-        intensity = data.samples[:, factory_config.start:factory_config.end][:,
-                    ::direction] * self.__factory_config.intensity_scale
-        clipped = data.clipped[:, factory_config.start:factory_config.end][:, ::direction]
+        data = device.readFrame(n_times)  # type: Frame
+        intensity = data.samples[:, start:end][:, ::direction] * scale
+        clipped = data.clipped[:, start:end][:, ::direction]
 
         return Data(
             intensity=intensity,
