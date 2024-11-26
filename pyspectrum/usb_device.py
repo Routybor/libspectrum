@@ -18,11 +18,8 @@ CMD_UNKNOWN = 0x3F
 
 
 class UsbDevice:
-    def __init__(self, vendor: int, product: int, serial: str, read_timeout: int):
+    def __init__(self, read_timeout: int):
         """
-        :param int vendor: USB vendor ID
-        :param int product: USB product ID
-        :param str serial: USB serial number (optional)
         :param int read_timeout: Timeout для операций чтения (в миллисекундах)
         """
         self.context = UsbContext()
@@ -30,7 +27,7 @@ class UsbDevice:
         self._pixel_number = 0x1006
         self._sequence_number = 1
 
-        self.context.open(vendor=vendor, product=product, serial=serial)
+        self.context.open()
         self.context.set_bitmode(0x40, 0x40)
         self.context.set_timeouts(300, 300)
 

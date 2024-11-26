@@ -7,10 +7,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .data import Data, Spectrum
-from .device_factory import DeviceID, create_device
 from .errors import ConfigurationError, LoadError, DeviceClosedError
 from .usb_device import UsbDevice
-from .ethernet_device import EthernetDevice
 
 
 def eprint(*args, **kwargs):
@@ -68,13 +66,13 @@ class Config:
 class Spectrometer:
     """Класс, представляющий высокоуровневую абстракцию над спектрометром"""
 
-    def __init__(self, device_id: DeviceID, factory_config: FactoryConfig = FactoryConfig.default(), reopen: bool = True):
+    def __init__(self, factory_config: FactoryConfig = FactoryConfig.default()):
         """
         Params:
             device_id: Идентификатор устройства. В настоящий момент поддерживаются UsbID, EthernetID
             factory_config: Заводские настройки
         """
-        self.__device: UsbDevice | EthernetDevice = create_device(device_id, reopen)
+        self.__device: UsbDevice = UsbDevice(read_timeout=10000)
         self.__factory_config = factory_config
         self.__config = Config()
         self.__device.setTimer(self.__config.exposure)
