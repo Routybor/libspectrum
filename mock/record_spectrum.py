@@ -1,10 +1,14 @@
-from pyspectrum import Spectrometer
-from pyspectrum.device_factory import EthernetID, UsbID
+import sys
+from pathlib import Path
 
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from pyspectrum import Spectrometer
+from pyspectrum.device_factory import MockUsbID
 
 def run_test():
     # Открываем устройство
-    device = Spectrometer(device_id=UsbID())
+    device = Spectrometer(device_id=MockUsbID())
     # device = Spectrometer(device_id=EthernetID(ip="127.0.0.1"))
 
     # Настройка устройства
