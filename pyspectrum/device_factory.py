@@ -26,22 +26,27 @@ class UsbID(DeviceID):
 
     read_timeout: int = field(default=10_000, compare=False)
 
-    def _create(self):
-        return UsbDevice(self.vid, self.pid, self.serial, self.read_timeout)
+    def _create(self) -> UsbDevice:
+        return UsbDevice(
+            vendor=self.vid,
+            product=self.pid,
+            serial=self.serial,
+            read_timeout=self.read_timeout,
+        )
 
 
 @dataclass(unsafe_hash=True)
 class EthernetID(DeviceID):
     ip: str
 
-    def _create(self):
-        return EthernetDevice(self.ip)
+    def _create(self) -> EthernetDevice:
+        return EthernetDevice(addr=self.ip)
 
 
 __device_cache: dict[DeviceID, Any] = dict()
 
 
-def create_device(spec: DeviceID, reopen: bool):
+def create_device(spec: DeviceID, reopen: bool) -> UsbDevice | EthernetDevice:
     if reopen and (spec in __device_cache):
         __device_cache[spec].close()
     device = spec._create()
@@ -59,10 +64,13 @@ class MockUsbID(DeviceID):
     pid: int = 0x6014
     """Usb serial (по умоолчанию открывается первое устройство с подходящими `vid` и `pid`)"""
     serial: str = ""
-    
+
     read_timeout: int = field(default=10_000, compare=False)
-    
+
     def _create(self) -> MockUsbDevice:
         return MockUsbDevice(
-            vendor=self.vid, product=self.pid, serial=self.serial, read_timeout=10_000
+            vendor=self.vid,
+            product=self.pid,
+            serial=self.serial,
+            read_timeout=self.read_timeout,
         )

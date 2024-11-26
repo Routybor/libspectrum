@@ -22,7 +22,7 @@ class MockUsbDevice(UsbDevice):
         self._sequence_number = 1
         self._opened = True
 
-    def close(self):
+    def close(self) -> None:
         """
         Закрывает соединение с мок-устройством.
         """
@@ -42,7 +42,9 @@ class MockUsbDevice(UsbDevice):
         Мок-реализация отправки команды. Возвращает фейковый успешный ответ.
         """
         return (
-            b"#ANS\x2B\x02" + self._sequence_number.to_bytes(2, "little") + b"\x00\x00"
+            b"#ANS\x2B\x02"
+            + self._sequence_number.to_bytes(length=2, byteorder="little")
+            + b"\x00\x00"
         )
 
     def readFrame(self, n_times: int) -> Frame:
@@ -51,9 +53,9 @@ class MockUsbDevice(UsbDevice):
         """
         pixel_count = self.get_pixel_count()
         samples = np.random.randint(
-            0, 65535, size=(n_times, pixel_count), dtype=np.uint16
+            low=0, high=65535, size=(n_times, pixel_count), dtype=np.uint16
         )
         clipped = np.random.choice(
-            [False, True], size=(n_times, pixel_count), p=[0.95, 0.05]
+            a=[False, True], size=(n_times, pixel_count), p=[0.95, 0.05]
         )
         return Frame(samples=samples, clipped=clipped)
