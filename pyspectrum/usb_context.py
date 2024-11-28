@@ -1,6 +1,6 @@
 import platform
 
-if platform.system() == "Windows":
+if platform.system() == "Windows" or platform.system() == "Darwin":
     import ftd2xx as ftd
 else:
     import pylibftdi as ftdi
@@ -9,7 +9,7 @@ else:
 class UsbContext:
     def __init__(self):
         self.device = None
-        self.is_linux = platform.system() != "Windows"
+        self.is_linux = platform.system() != "Windows" and platform.system() != "Darwin"
 
     def open(self):
         if self.is_linux:
