@@ -8,8 +8,7 @@ from pyspectrum.device_factory import MockUsbID
 
 def run_test():
     # Открываем устройство
-    device = Spectrometer(device_id=MockUsbID())
-    # device = Spectrometer(device_id=EthernetID(ip="127.0.0.1"))
+    device = Spectrometer(device_id=MockUsbID(mock_data_file="pyspectrum/data/device_data1.csv"))
 
     # Настройка устройства
     device.set_config(

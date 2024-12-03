@@ -1,61 +1,77 @@
 import numpy as np
-from .usb_device import UsbDevice
+import csv
+from pathlib import Path
+
 from .data import Frame
 
 
-class MockUsbDevice(UsbDevice):
-    def __init__(
-        self,
-        vendor: int,
-        product: int,
-        serial: str,
-        read_timeout: int,
-    ) -> None:
+class MockUsbDevice:
+    def __init__(self, data_file: str, read_timeout: int):
         """
-        Мок-реализация USB устройства.
+        Имитирует поведение USB устройства, используя данные из файла .csv
+        :param data_file: путь к файлу .csv с реальными данными спектра.
+        :param read_timeout: время ожидания для операций чтения (в миллисекундах).
         """
-        self._vendor = vendor
-        self._product = product
-        self._serial = serial
+        self._data_file = Path(data_file)
         self._read_timeout = read_timeout
-        self._pixel_number = 0x1006  # Количество пикселей
+        self._pixel_number = 0x1006  # фиксированное количество пикселей
         self._sequence_number = 1
-        self._opened = True
+        self._data = self._load_data()
 
-    def close(self) -> None:
+    def _load_data(self):
         """
-        Закрывает соединение с мок-устройством.
+        Загружает данные из файла и масштабирует их.
         """
-        if not self._opened:
-            raise RuntimeError("Device is not opened.")
-        self._opened = False
+        if not self._data_file.exists():
+            raise FileNotFoundError(f"Data file {self._data_file} not found.")
+        
+        scaled_data = []
+        with open(self._data_file, 'r') as file:
+            reader = csv.reader(file, delimiter='\t')
+            for row in reader:
+                # Преобразуем значения в float и масштабируем
+                scaled_row = [float(value) * 100 * (2**16 - 1) for value in row]
+                scaled_data.append(scaled_row)
+        
+        # Обрезаем значения, чтобы они соответствовали диапазону uint16
+        scaled_data = np.array(scaled_data, dtype=np.float64)
+        scaled_data = np.clip(scaled_data, 0, np.iinfo(np.uint16).max)
+        return scaled_data.astype(np.uint16)
+
+
+    def close(self):
+        """Закрыть соединение."""
+        pass  # Ничего не делаем для mock
 
     @property
     def isOpened(self) -> bool:
-        return self._opened
+        """
+        :return: True если устройство готово к работе
+        """
+        return True
 
     def get_pixel_count(self) -> int:
+        """
+        :return: Кол-во пикселей
+        """
         return self._pixel_number
 
-    def _send_command(self, code: int, data: int) -> bytes:
-        """
-        Мок-реализация отправки команды. Возвращает фейковый успешный ответ.
-        """
-        return (
-            b"#ANS\x2B\x02"
-            + self._sequence_number.to_bytes(length=2, byteorder="little")
-            + b"\x00\x00"
-        )
+    def setTimer(self, millis: int):
+        """Эмулирует установку экспозиции."""
+        pass  # Не влияет на mock-данные
 
-    def readFrame(self, n_times: int) -> Frame:
+    def readFrame(self, n_times: int):
         """
-        Возвращает сгенерированные данные вместо чтения их с реального устройства.
+        Имитирует чтение кадра спектральных данных.
+        :param n_times: количество накоплений/линий
+        :return: Массив данных спектра
         """
-        pixel_count = self.get_pixel_count()
-        samples = np.random.randint(
-            low=0, high=65535, size=(n_times, pixel_count), dtype=np.uint16
-        )
-        clipped = np.random.choice(
-            a=[False, True], size=(n_times, pixel_count), p=[0.95, 0.05]
-        )
-        return Frame(samples=samples, clipped=clipped)
+        if n_times > len(self._data):
+            raise ValueError(
+                f"Requested {n_times} frames, but only {len(self._data)} available in mock data."
+            )
+
+        # Получаем кадры из mock-данных
+        frames = self._data[:n_times]
+        clipped = np.where(frames == np.iinfo(np.uint16).max, 1, 0)
+        return Frame(samples=frames, clipped=clipped)

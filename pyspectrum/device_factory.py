@@ -57,20 +57,11 @@ def create_device(spec: DeviceID, reopen: bool) -> UsbDevice | EthernetDevice:
 @dataclass(unsafe_hash=True)
 class MockUsbID(DeviceID):
     """Идентификатор usb спектрометра"""
-
-    """Usb vendor id"""
-    vid: int = 0x0403
-    """Usb product id"""
-    pid: int = 0x6014
-    """Usb serial (по умоолчанию открывается первое устройство с подходящими `vid` и `pid`)"""
-    serial: str = ""
-
     read_timeout: int = field(default=10_000, compare=False)
-
+    mock_data_file: str = field(default=None)  # путь к mock .csv файлу
+    
     def _create(self) -> MockUsbDevice:
         return MockUsbDevice(
-            vendor=self.vid,
-            product=self.pid,
-            serial=self.serial,
             read_timeout=self.read_timeout,
+            data_file=self.mock_data_file,
         )
