@@ -34,7 +34,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: libspectrum-${{ matrix.python-version }}
+        name: libspectrum-windows-${{ matrix.python-version }}
         path: dist/*.whl
 
   build-linux:
@@ -68,7 +68,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: libspectrum-${{ matrix.python-version }}
+        name: libspectrum-linux-${{ matrix.python-version }}
         path: dist/*
 
   test:
@@ -99,10 +99,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Download artifact
+      - name: Download artifact (Windows)
+        if: matrix.os == 'windows-latest'
         uses: actions/download-artifact@v4
         with:
-          name: libspectrum-${{ matrix.python-version }}
+          name: libspectrum-windows-${{ matrix.python-version }}
+          path: artifacts/
+
+      - name: Download artifact (Unix)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/download-artifact@v4
+        with:
+          name: libspectrum-linux-${{ matrix.python-version }}
           path: artifacts/
       
       - name: Install dependencies
