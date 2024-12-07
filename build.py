@@ -11,16 +11,18 @@ class CustomBuildHook(BuildHookInterface):
         if platform.system() == "Linux":
             root = Path(self.root)
             
-            print("Configuring and building Cmake:", flush=True)
+            print("STATUS: Configuring and building Cmake:", flush=True)
             subprocess.check_call(["cmake", "-S", ".", "-B", "build"])
             subprocess.check_call(["cmake", "--build", "build"])
             
+            print("STATUS: Deleting usb_*.py files:", flush=True)
             try:
                 (root / "pyspectrum/usb_device.py").unlink()
                 (root / "pyspectrum/usb_context.py").unlink()
             except FileNotFoundError:
                 print(f"Files not found", flush=True)
             
+            print("STATUS: Copying .so file:", flush=True)
             so_files = list(Path("build").glob("usb_device.*.so"))
             if so_files:
                 target_dir = root / "pyspectrum"
