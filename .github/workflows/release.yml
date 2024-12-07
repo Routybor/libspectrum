@@ -55,7 +55,7 @@ jobs:
         python-version: ${{matrix.python-version}}
 
     - name: Install build tools
-      run: python -m pip install --upgrade pip build hatch
+      run: python -m pip install --upgrade pip pybind11 hatch
 
     - name: Install system dependencies
       run: |
