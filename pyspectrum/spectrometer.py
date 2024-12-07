@@ -66,21 +66,21 @@ class Config:
 class Spectrometer:
     """Класс, представляющий высокоуровневую абстракцию над спектрометром"""
 
-    def __init__(self, factory_config: FactoryConfig = FactoryConfig.default()):
+    def __init__(self, vendor=0x0403, product=0x6014, factory_config: FactoryConfig = FactoryConfig.default()):
         """
         Params:
             device_id: Идентификатор устройства. В настоящий момент поддерживаются UsbID, EthernetID
             factory_config: Заводские настройки
         """
-        self.__device: UsbDevice = UsbDevice(read_timeout=10000)
+        self.__device: UsbDevice = UsbDevice(vendor=vendor, product=product)
         self.__factory_config = factory_config
         self.__config = Config()
-        self.__device.setTimer(self.__config.exposure)
+        self.__device.set_timer(self.__config.exposure)
         self.__dark_signal: Data | None = None
         self.__wavelengths: NDArray[float] | None = None
 
     def __check_opened(self):
-        if not self.__device.isOpened:
+        if not self.__device.is_opened:
             raise DeviceClosedError()
 
     def close(self) -> None:
@@ -161,7 +161,7 @@ class Spectrometer:
         direction = -1 if self.__factory_config.reverse else 1
         n_times = config.n_times if n_times is None else n_times
 
-        data = device.readFrame(n_times)  # type: Frame
+        data = device.read_frame(n_times)  # type: Frame
         intensity = data.samples[:, start:end][:, ::direction] * scale
         clipped = data.clipped[:, start:end][:, ::direction]
 
@@ -224,7 +224,7 @@ class Spectrometer:
         if (exposure is not None) and (exposure != self.__config.exposure):
             self.__check_opened()
             self.__config.exposure = exposure
-            self.__device.setTimer(self.__config.exposure)
+            self.__device.set_timer(self.__config.exposure)
 
             if self.__dark_signal is not None:
                 self.__dark_signal = None
