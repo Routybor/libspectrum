@@ -26,15 +26,15 @@ jobs:
         python-version: ${{matrix.python-version}}
 
     - name: Install build tools
-      run: python -m pip install --upgrade pip build hatch
+      run: python -m pip install --upgrade pip hatch
 
     - name: Build wheel
-      run: python -m build --wheel --outdir dist
+      run: hatch build
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: vmk-spectrum-windows-${{ matrix.python-version }}
+        name: libspectrum-windows-${{ matrix.python-version }}
         path: dist/*.whl
 
   build-linux:
@@ -63,12 +63,12 @@ jobs:
         sudo apt-get install -y libftdipp1-dev cmake
 
     - name: Build wheel
-      run: python -m build --wheel --outdir dist
+      run: hatch build
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: vmk-spectrum-${{ matrix.python-version }}
+        name: libspectrum-${{ matrix.python-version }}
         path: dist/*
 
   test:
