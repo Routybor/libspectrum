@@ -34,7 +34,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: libspectrum-windows-${{ matrix.python-version }}
+        name: libspectrum-${{ matrix.python-version }}
         path: dist/*.whl
 
   build-linux:

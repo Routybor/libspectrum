@@ -7,14 +7,16 @@ name = "libspectrum"
 version = "0.0.1"
 description = "Library for communication with VMK spectrometer through USB interface"
 requires-python = ">=3.11"
-dependencies = ["numpy", "matplotlib", "scipy"]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "ftd2xx==1.3.8; platform_system == 'Windows'",
+]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
 readme-file = "README.md"
-
-[project.optional-dependencies]
-windows = ["ftd2xx==1.3.8"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["pyspectrum"]
