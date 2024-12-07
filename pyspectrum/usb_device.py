@@ -18,8 +18,19 @@ CMD_UNKNOWN = 0x3F
 
 
 class UsbDevice:
-    def __init__(self, read_timeout: int):
+    """
+    Класс для работы с USB устройством
+    
+    Пример использования:
+    >>> device = UsbDevice(vendor=0x0403, product=0x6014)
+    >>> device.set_timer(1)
+    >>> frame = device.read_frame(10)
+    >>> device.close()
+    """
+    def __init__(self, vendor: int, product: int, read_timeout=10000):
         """
+        :param int vendor: Vendor ID USB устройства
+        :param int product: Product ID USB устройства
         :param int read_timeout: Timeout для операций чтения (в миллисекундах)
         """
         self.context = UsbContext()
