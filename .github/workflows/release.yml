@@ -8,13 +8,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-windows:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - python-version: '3.10'
           - python-version: '3.11'
+          - python-version: '3.12'
+          - python-version: '3.13'
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{matrix.python-version}}
+
+    - name: Install build tools
+      run: python -m pip install --upgrade pip build hatch
+
+    - name: Build wheel
+      run: python -m build --wheel --outdir dist
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: vmk-spectrum-windows-${{ matrix.python-version }}
+        path: dist/*.whl
+
+  build-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: '3.11'
+          - python-version: '3.12'
+          - python-version: '3.13'
 
     runs-on: ubuntu-latest
 
@@ -25,10 +55,15 @@ jobs:
         python-version: ${{matrix.python-version}}
 
     - name: Install build tools
-      run: python -m pip install --upgrade pip build
+      run: python -m pip install --upgrade pip build hatch
 
-    - name: Build wheel and sdist
-      run: python -m build --sdist --wheel --outdir dist
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libftdipp1-dev cmake
+
+    - name: Build wheel
+      run: python -m build --wheel --outdir dist
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -37,19 +72,23 @@ jobs:
         path: dist/*
 
   test:
-    needs: build
+    needs: [build-linux, build-windows]
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
-            python-version: '3.10'
+            python-version: '3.11'
           - os: ubuntu-latest
+            python-version: '3.12'
+          - os: ubuntu-latest
+            python-version: '3.13'
+          - os: windows-latest
             python-version: '3.11'
           - os: windows-latest
-            python-version: '3.10'
+            python-version: '3.12'
           - os: windows-latest
-            python-version: '3.11'
+            python-version: '3.13'
 
     runs-on: ${{ matrix.os }}
 
@@ -63,7 +102,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: vmk-spectrum-${{ matrix.python-version }}
+          name: libspectrum-${{ matrix.python-version }}
           path: artifacts/
       
       - name: Install dependencies
@@ -127,20 +166,23 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/download-artifact@v4
-    - uses: marvinpinto/action-automatic-releases@v1.2.1
-      with:
-        repo_token: ${{secrets.GITHUB_TOKEN}}
-        automatic_release_tag: 'latest'
-        title: 'Latest Build'
-        files: |
-          ${{github.workspace}}/*/*.whl
-    - name: Copy whl files
-      run: 'mkdir dist; cp $GITHUB_WORKSPACE/*/*.whl dist/'
-    - name: Publish distribution to PyPI
-#      if: startsWith(github.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-#        packages-dir: ${{github.workspace}}/
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create Release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: 'latest'
+          title: 'Latest Build'
+          files: dist/**/*.whl
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist/

@@ -6,8 +6,7 @@ build-backend = "hatchling.build"
 name = "libspectrum"
 version = "0.0.1"
 description = "Library for communication with VMK spectrometer through USB interface"
-authors = []
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = ["numpy", "matplotlib", "scipy"]
 
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
