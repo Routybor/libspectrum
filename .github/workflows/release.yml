@@ -146,7 +146,7 @@ jobs:
         shell: bash
 
       - name: Run tests
-        run: pytest tests/
+        run: cd tests/ && pytest
 
   upload-docs:
     if: ${{github.ref == 'refs/heads/master'}}
