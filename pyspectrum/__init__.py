@@ -4,5 +4,5 @@ from .spectrometer import Spectrometer, FactoryConfig
 from .usb_device import UsbDevice
 
 import platform
-if platform.system() == "Windows":
+if platform.system() != "Linux":
     from .usb_context import UsbContext
