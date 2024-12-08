@@ -161,13 +161,13 @@ jobs:
 
   upload-docs:
     if: ${{github.ref == 'refs/heads/master'}}
-    runs-on: windows-latest
+    runs-on: macos-latest
     needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.13'
 
       - name: Install documentation tools
         run: pip install mkdocs mkdocs-material mkdocstrings mkdocstrings-python mkdocs-jupyter
