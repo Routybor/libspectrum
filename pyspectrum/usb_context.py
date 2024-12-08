@@ -6,11 +6,11 @@ class UsbContext:
     Класс для работы с устройством FTDI через библиотеку ftd2xx на системе Windows.
     
     ### Пример использования:
-    ```
+    ```python
     context = UsbContext()
     context.open()
     context.set_bitmode(0x40, 0x40)
-    context.set_timeouts(5000, 5000)
+    context.set_timeouts(300, 300)
     # Ваш код для работы с устройством FTDI...
     context.close()
     ```

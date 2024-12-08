@@ -18,7 +18,7 @@ def eprint(*args, **kwargs):
 @dataclass(frozen=True)
 class FactoryConfig:
     """
-    Настройки, индивидуадьные для каждого устройства
+    Настройки, индивидуадьные для каждого устройства.
     """
     start: int
     end: int
@@ -28,10 +28,12 @@ class FactoryConfig:
     @staticmethod
     def load(path: str) -> 'FactoryConfig':
         """
-        Args:
-            path: Путь к файлу заводских настроек
-        Returns:
-            Объект заводских настроек
+        Загружает заводские настройки из файла.
+        
+        :param path: Путь к файлу заводских настроек
+        :type path: str
+        :return: Объект заводских настроек
+        :rtype: FactoryConfig
         """
         try:
             with open(path, 'r') as f:
@@ -44,9 +46,10 @@ class FactoryConfig:
     @staticmethod
     def default() -> 'FactoryConfig':
         """
-        Создаёт заводские настройки для тестрирования
-        Returns:
-            Объект заводских настроек
+        Создаёт заводские настройки для тестрирования.
+        
+        :return: Объект заводских настроек
+        :rtype: FactoryConfig
         """
         return FactoryConfig(
             2050,
@@ -64,13 +67,16 @@ class Config:
 
 
 class Spectrometer:
-    """Класс, представляющий высокоуровневую абстракцию над спектрометром"""
+    """
+    Класс, предоставляющий высокоуровневую абстракцию для работы со спетрометром
+    """
 
     def __init__(self, vendor=0x0403, product=0x6014, factory_config: FactoryConfig = FactoryConfig.default()):
         """
-        Params:
-            device_id: Идентификатор устройства. В настоящий момент поддерживаются UsbID, EthernetID
-            factory_config: Заводские настройки
+        :param int vendor: Идентификатор производителя.
+        :param int product: Идентификатор продукта.
+        :param factory_config: Заводские настройки
+        :type factory_config: FactoryConfig
         """
         self.__device: UsbDevice = UsbDevice(vendor=vendor, product=product)
         self.__factory_config = factory_config
@@ -84,14 +90,20 @@ class Spectrometer:
             raise DeviceClosedError()
 
     def close(self) -> None:
-        """Закрыть устройство"""
+        """
+        Закрывает соединение с устройством.
+        """
         self.__device.close()
 
     # --------        dark signal        --------
 
     @property
     def dark_signal(self) -> Data | None:
-        """Текущий темновой сигнал"""
+        """
+        Возвращает текущий темновой сигнал.
+        
+        :rtype: Data | None
+        """
         return self.__dark_signal
 
     def __load_dark_signal(self):
@@ -113,14 +125,16 @@ class Spectrometer:
 
     def read_dark_signal(self, n_times: Optional[int] = None) -> None:
         """
-        Считать темновой сигнал
-        Args:
-            n_times: Количество измерений. При обработке данных будет использовано среднее значение
+        Измеряет темновой сигнал.
+        :param n_times: Количество измерений. При обработке данных будет использовано среднее значение
+        :type n_timess: int | None
         """
         self.__dark_signal = self.read_raw(n_times)
 
     def save_dark_signal(self):
-        """Сохранить темновой сигнал"""
+        """
+        Сохраняет темновой сигнал в файл.
+        """
         if self.__config.dark_signal_path is None:
             raise ConfigurationError('Dark signal path is not set')
         if self.__dark_signal is None:
@@ -145,10 +159,13 @@ class Spectrometer:
     # --------        read raw        --------
     def read_raw(self, n_times: Optional[int] = None) -> Data:
         """
-        Получить сырые данные с устройства
-        Returns:
-            Сырые данные, полученные с устройства
+        Получить сырые данные с устройства.
+        
+        :param n_times: Количество измерений.
+        :type n_timess: int | None
 
+        :return: Данные с устройства.
+        :rtype: Data
         """
         self.__check_opened()
 
@@ -174,13 +191,13 @@ class Spectrometer:
     # --------        read        --------
     def read(self, force: bool = False) -> Spectrum:
         """
-       Получить обработанный спектр с устройства
-       Args:
-           force: Если ``True``, позволяет считать сигнал без калибровки по длина волн
-       Returns:
-           Считанный спектр
+        Получить обработанный спектр с устройства.
 
-       """
+        :param bool force: Если ``True``, позволяет считать сигнал без калибровки по длина волн
+        
+        :return: Считанный спектр
+        :rtype: Spectrum
+        """
         if self.__wavelengths is None and not force:
             raise ConfigurationError('Wavelength calibration is not loaded')
         if self.__dark_signal is None:
@@ -199,11 +216,18 @@ class Spectrometer:
     # --------        config        --------
     @property
     def config(self) -> Config:
+        """
+        Возвращает текущую конфигурацию спектрометра.
+        :rtpe: Config
+        """
         return self.__config
 
     @property
     def is_configured(self) -> bool:
-        """Возвращает `True`, если спектрометр настроен для чтения обработанных данных"""
+        """
+        Возвращает `True`, если спектрометр настроен для чтения обработанных данных.
+        :rtype: bool
+        """
         return (self.__dark_signal is not None) and (self.__wavelengths is not None)
 
     def set_config(self,
@@ -212,14 +236,21 @@ class Spectrometer:
                    dark_signal_path: Optional[str] = None,
                    wavelength_calibration_path: Optional[str] = None,
                    ):
-        """Установить настройки спектрометра. Все параметры опциональны, при
+        """
+        Установить настройки спектрометра. Все параметры опциональны, при
         отсутствии параметра соответствующая настройка не изменяется.
 
-        Params:
-            exposure: Время экспозиции (в мс). При изменении темновой сигнал будет сброшен.
-            n_times: Количество измерений
-            dark_signal_path: Путь к файлу темнового сигнала. Если файл темнового сигнала существует и валиден, он будет загружен.
-            wavelength_calibration_path: Путь к файлу данных калибровки по длине волны
+        :param exposure: Время экспозиции в мс. При изменении темновой сигнал будет сброшен.
+        :type exposure: int | None
+
+        :param n_times: Количество измерений
+        :type n_times: int | None
+
+        :param dark_signal_path: Путь к файлу темнового сигнала. Если файл темнового сигнала существует и валиден, он будет загружен.
+        :type dark_signal_path: str | None
+
+        :param wavelength_calibration_path: Путь к файлу данных калибровки по длине волны
+        :type wavelength_calibration_path: str | None
         """
         if (exposure is not None) and (exposure != self.__config.exposure):
             self.__check_opened()
