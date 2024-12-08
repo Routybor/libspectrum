@@ -8,6 +8,9 @@
 
 Python библиотека для работы со спектрометрами производства VMK через USB интерфейс.
 
+🔍 [Документация](https://routybor.github.io/libspectrum/)
+<!-- 📦 [PyPI](https://pypi.org/project/vmk-spectrum/) | -->
+
 </div>
 
 ## ✨ Возможности
@@ -25,17 +28,3 @@ Python библиотека для работы со спектрометрам�
 | Windows | ✅ | Python + ftd2xx |
 | Linux (Ubuntu) | ⚠️ | C++ + libftdi |
 | macOS | ❌ | Не поддерживается |
-
-## 📚 Документация
-
-Полная документация доступна на [routybor.github.io/libspectrum](https://routybor.github.io/libspectrum/)
-
----
-
-<div align="center">
-
-🔍 [Документация](https://routybor.github.io/libspectrum/) |
-<!-- 📦 [PyPI](https://pypi.org/project/vmk-spectrum/) | -->
-💻 [GitHub](https://github.com/Routybor/libspectrum)
-
-</div>
