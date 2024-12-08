@@ -11,8 +11,8 @@ struct UsbContext::Private {
 UsbContext::UsbContext() : p(new Private) {}
 UsbContext::~UsbContext() {}
 
-void UsbContext::open(int vendor, int product, const std::string& serial) {
-    if (p->context.open(vendor, product,  std::string(), serial, 0) < 0) {
+void UsbContext::open(int vendor, int product) {
+    if (p->context.open(vendor, product) < 0) {
         throw std::runtime_error("Failed to open device");
     }
 }

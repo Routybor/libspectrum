@@ -4,19 +4,18 @@ hide:
 ---
 # Документация API
 
-## Spectrometer
+## Класс Spectrometer
+
 ::: pyspectrum.Spectrometer
 
-## FactoryConfig
+## Класс FactoryConfig
+
 ::: pyspectrum.FactoryConfig
 
-## Data
+## Класс Data
+
 ::: pyspectrum.Data
 
-## Spectrum
-::: pyspectrum.Spectrum
-    selection:
-        inherited_members: true
+## Класс Spectrum
 
-## UsbID
-::: pyspectrum.UsbID
+::: pyspectrum.Spectrum
