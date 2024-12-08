@@ -12,17 +12,19 @@
         <link rel="prev" href="../develop-environment/">
       
       
+        <link rel="next" href="../platform-limitations/">
+      
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.44">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.48">
     
     
       
-        <title>Архитектурный обзор - Pyspectrum documentation</title>
+        <title>Архитектурный обзор - Libspectrum</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
       
       
 
@@ -61,6 +63,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#_1" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -71,7 +78,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Pyspectrum documentation" class="md-header__button md-logo" aria-label="Pyspectrum documentation" data-md-component="logo">
+    <a href="../.." title="Libspectrum" class="md-header__button md-logo" aria-label="Libspectrum" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -85,7 +92,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Pyspectrum documentation
+            Libspectrum
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -141,6 +148,18 @@
 </div>
     
     
+      <div class="md-header__source">
+        <a href="https://github.com/Routybor/libspectrum" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    libspectrum
+  </div>
+</a>
+      </div>
+    
   </nav>
   
 </header>
@@ -165,24 +184,7 @@
   
     
   
-  Pyspectrum
-
-      </a>
-    </li>
-  
-
-      
-        
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../../installation/" class="md-tabs__link">
-        
-  
-    
-  
-  Установка библиотеки
+  Libspectrum
 
       </a>
     </li>
@@ -199,7 +201,7 @@
   
     
   
-  Документация API
+  API
 
       </a>
     </li>
@@ -217,6 +219,24 @@
           
   
   Примеры
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../user-docs/overview/" class="md-tabs__link">
+          
+  
+  Документация Пользователя
 
         </a>
       </li>
@@ -255,6 +275,8 @@
           
             
               
+                
+              
               <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
@@ -266,14 +288,26 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Pyspectrum documentation" class="md-nav__button md-logo" aria-label="Pyspectrum documentation" data-md-component="logo">
+    <a href="../.." title="Libspectrum" class="md-nav__button md-logo" aria-label="Libspectrum" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Pyspectrum documentation
+    Libspectrum
   </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Routybor/libspectrum" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    libspectrum
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -288,27 +322,7 @@
         
   
   <span class="md-ellipsis">
-    Pyspectrum
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../installation/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Установка библиотеки
+    Libspectrum
   </span>
   
 
@@ -328,7 +342,7 @@
         
   
   <span class="md-ellipsis">
-    Документация API
+    API
   </span>
   
 
@@ -354,10 +368,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -368,8 +382,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Примеры
           </label>
@@ -470,6 +484,114 @@
       
   
   
+  
+  
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Документация Пользователя
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Документация Пользователя
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-docs/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Обзор
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-docs/installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Уставка библиотеки
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-docs/usb-device/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Класс UsbDevice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -543,6 +665,19 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Архитектурный обзор
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -554,6 +689,229 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏗️ Компонентная архитектура
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      📦 Компоненты библиотеки
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📦 Компоненты библиотеки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-python-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Python Library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Python Library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectrometer-spectrometerpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🌈 Spectrometer (spectrometer.py)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-spectrum-datapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Data &amp; Spectrum (data.py)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-communication-layer-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB Communication Layer (Python)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USB Communication Layer (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usbdevice-usb_devicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔌 UsbDevice (usb_device.py)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usbcontext-usb_contextpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ UsbContext (usb_context.py)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-communication-layer-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB Communication Layer (C++)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USB Communication Layer (C++)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usbdevice-usbdevicecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔌 UsbDevice (UsbDevice.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usbcontext-usbcontextcpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ UsbContext (UsbContext.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frame-framecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      📥 Frame (Frame.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Поток данных
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../platform-limitations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Платформенные ограничения
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usb-device/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Класс UsbDevice
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usb-context/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Класс UsbContext
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -574,7 +932,9 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
@@ -583,6 +943,157 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      🏗️ Компонентная архитектура
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      📦 Компоненты библиотеки
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📦 Компоненты библиотеки">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-python-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      Core Python Library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Python Library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#spectrometer-spectrometerpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🌈 Spectrometer (spectrometer.py)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-spectrum-datapy" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Data &amp; Spectrum (data.py)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-communication-layer-python" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB Communication Layer (Python)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USB Communication Layer (Python)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usbdevice-usb_devicepy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔌 UsbDevice (usb_device.py)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usbcontext-usb_contextpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ UsbContext (usb_context.py)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usb-communication-layer-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB Communication Layer (C++)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="USB Communication Layer (C++)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usbdevice-usbdevicecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔌 UsbDevice (UsbDevice.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#usbcontext-usbcontextcpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      🛠️ UsbContext (UsbContext.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#frame-framecpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      📥 Frame (Frame.cpp)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      🔄 Поток данных
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -596,12 +1107,143 @@
                 
                   
 
-
-  <h1>Архитектурный обзор</h1>
-
-
+  
+  
 
 
+<h1 id="_1">Архитектурный обзор</h1>
+<div class="admonition abstract">
+<p class="admonition-title">Общая структура</p>
+<p>Библиотека разделена на два основных компонента:</p>
+<p><strong>Core Python Library</strong>
+: Основная функциональность спектрометра (обработка данных и высокоуровневое управление)</p>
+<p><strong>USB Communication Layer</strong>
+: Слой коммуникации с USB-устройством (реализации на Python и C++)</p>
+</div>
+<h2 id="_2">🏗️ Компонентная архитектура</h2>
+<pre class="mermaid"><code>graph TB
+    subgraph Core["Core Python Library"]
+        A[spectrometer.py&lt;br/&gt;Spectrometer]
+        B[data.py&lt;br/&gt;Data, Spectrum]
+        A --&gt;|uses| B
+    end
+
+    subgraph Python["USB Communication Layer (Python)"]
+        C[usb_device.py&lt;br/&gt;UsbDevice]
+        D[usb_context.py&lt;br/&gt;UsbContext]
+        C --&gt;|uses| D
+    end
+
+    subgraph Cpp["USB Communication Layer (C++)"]
+        E[UsbDevice.cpp&lt;br/&gt;UsbDevice]
+        F[UsbContext.cpp&lt;br/&gt;UsbContext]
+        G[Frame.cpp&lt;br/&gt;Frame]
+        E --&gt;|uses| F
+        E --&gt;|uses| G
+    end
+
+    Core --&gt;|depends on| Python
+    Core -.-&gt;|depends on| Cpp
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#fdb,stroke:#333,stroke-width:2px
+    style D fill:#fdb,stroke:#333,stroke-width:2px
+    style E fill:#dfd,stroke:#333,stroke-width:2px
+    style F fill:#dfd,stroke:#333,stroke-width:2px
+    style G fill:#dfd,stroke:#333,stroke-width:2px</code></pre>
+<div class="admonition info">
+<p class="admonition-title">Платформенная специфика</p>
+<ul>
+<li>🪟 <strong>Windows</strong>: Использует Python-реализацию USB-слоя</li>
+<li>🐧 <strong>Linux</strong>: Использует C++-реализацию USB-слоя</li>
+<li>🍎 <strong>macOS</strong>: Не поддерживается</li>
+</ul>
+</div>
+<h2 id="_3">📦 Компоненты библиотеки</h2>
+<h3 id="core-python-library">Core Python Library</h3>
+<h4 id="spectrometer-spectrometerpy">🌈 Spectrometer (spectrometer.py)</h4>
+<ul>
+<li>Высокоуровневый интерфейс управления</li>
+<li>Конфигурация и калибровка</li>
+<li>Координация сбора данных</li>
+<li>Абстракция над USB-слоем</li>
+</ul>
+<h4 id="data-spectrum-datapy">📊 Data &amp; Spectrum (data.py)</h4>
+<ul>
+<li>Структуры данных измерений</li>
+<li>Математические операции</li>
+<li>Персистентность данных</li>
+</ul>
+<h3 id="usb-communication-layer-python">USB Communication Layer (Python)</h3>
+<h4 id="usbdevice-usb_devicepy">🔌 UsbDevice (usb_device.py)</h4>
+<ul>
+<li>Реализация протокола устройства</li>
+<li>Управление конфигурацией</li>
+<li>Обработка кадров данных</li>
+</ul>
+<h4 id="usbcontext-usb_contextpy">🛠️ UsbContext (usb_context.py)</h4>
+<ul>
+<li>Низкоуровневые USB операции</li>
+<li>Управление подключением</li>
+<li>Работа с ftd2xx</li>
+</ul>
+<h3 id="usb-communication-layer-c">USB Communication Layer (C++)</h3>
+<h4 id="usbdevice-usbdevicecpp">🔌 UsbDevice (UsbDevice.cpp)</h4>
+<ul>
+<li>C++ реализация протокола</li>
+<li>Управление устройством</li>
+<li>Интеграция через pybind11</li>
+</ul>
+<h4 id="usbcontext-usbcontextcpp">🛠️ UsbContext (UsbContext.cpp)</h4>
+<ul>
+<li>Нативные USB операции</li>
+<li>Работа с libftdi</li>
+</ul>
+<h4 id="frame-framecpp">📥 Frame (Frame.cpp)</h4>
+<ul>
+<li>Структура кадра данных</li>
+<li>Конвертация в numpy</li>
+</ul>
+<h2 id="_4">🔄 Поток данных</h2>
+<pre class="mermaid"><code>sequenceDiagram
+    participant App as User Application
+    participant Spec as Spectrometer.py
+    participant USB as USB Layer&lt;br/&gt;(Python or C++)
+    participant Dev as Physical Device
+
+    Note over USB: Единый интерфейс для обеих реализаций
+
+    App-&gt;&gt;Spec: read()
+    activate Spec
+
+    Spec-&gt;&gt;USB: set_timer(exposure_ms)
+    USB-&gt;&gt;Dev: COMMAND_WRITE_TIMER
+    Dev--&gt;&gt;USB: reply OK
+
+    Spec-&gt;&gt;USB: read_frame(n_times)
+    activate USB
+
+    USB-&gt;&gt;Dev: COMMAND_READ_FRAME
+    Dev--&gt;&gt;USB: #DAT packets
+
+    Note over USB: Обработка сырых данных
+
+    USB--&gt;&gt;Spec: Frame(samples, clipped)
+    deactivate USB
+
+    Note over Spec: Коррекция темнового сигнала
+
+    Spec--&gt;&gt;App: Spectrum object
+    deactivate Spec</code></pre>
+<div class="admonition tip">
+<p class="admonition-title">Ключевые особенности</p>
+<ul>
+<li>🔄 Единый интерфейс для обеих реализаций USB-слоя</li>
+<li>🔒 Изоляция платформо-зависимого кода</li>
+<li>📊 Унифицированная обработка данных</li>
+</ul>
+</div>
 
 
 
@@ -609,6 +1251,13 @@
 
 
 
+  
+  
+
+
+
+
+  
 
 
 
