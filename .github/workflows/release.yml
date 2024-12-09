@@ -195,17 +195,34 @@ jobs:
       id-token: write
         
     steps:
-      - name: Download all the dists
+      - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: libspectrum-windows-*
           path: dist/
-          merge-multiple: true
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: libspectrum-linux-*
+          path: dist/
 
       - name: Display structure of downloaded files
-        run: ls -R dist/
+        run: |
+          ls -R dist/
+          echo "File details:"
+          file dist/**/*.whl
+
+      - name: Validate wheels
+        run: |
+          pip install twine check-wheel-contents
+          twine check dist/**/*.whl
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          verbose: true
 
   github-release:
     name: >-
