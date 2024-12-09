@@ -182,7 +182,7 @@ jobs:
   publish-to-pypi:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
-    if: startsWith(github.ref, 'refs/tags/release')  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'refs/tags/v')  # only publish to PyPI on tag pushes
     needs:
       - test
     runs-on: ubuntu-latest
