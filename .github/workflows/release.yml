@@ -199,24 +199,27 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: libspectrum-windows-*
-          path: dist/
-
+          path: temp/windows/
+          
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: libspectrum-linux-*
-          path: dist/
+          path: temp/linux/
 
-      - name: Display structure of downloaded files
+      - name: Create dist directory
+        run: mkdir -p dist
+
+      - name: Collect all wheels
         run: |
-          ls -R dist/
-          echo "File details:"
-          file dist/**/*.whl
+          find temp -name "*.whl" -exec cp {} dist/ \;
+          echo "Contents of dist directory:"
+          ls -la dist/
 
       - name: Validate wheels
         run: |
           pip install twine check-wheel-contents
-          twine check dist/**/*.whl
+          twine check dist/*.whl
 
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
