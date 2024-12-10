@@ -9,9 +9,13 @@ class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         """Called before building the package"""
         
-        build_data["infer_tag"] = True
+        if platform.system() == "Windows":
+            build_data["infer_tag"] = True
         
         if platform.system() == "Linux":
+            python_tag = f"{sys.version_info.major}-{sys.version_info.minor}" 
+            build_data["tag"] = f"{python_tag}-{python_tag}-manylinux_2_17_x86_64"
+            
             root = Path(self.root)
             
             print("STATUS: Configuring and building Cmake:", flush=True)
