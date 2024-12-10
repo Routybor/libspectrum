@@ -67,3 +67,4 @@ nav:
       - "Платформенные ограничения" : "dev-docs/platform-limitations.md"
       - "Класс UsbDevice": "dev-docs/usb-device.md"
       - "Класс UsbContext": "dev-docs/usb-context.md"
+      - "Документация драйвверов": "dev-docs/driver-docs.md"
