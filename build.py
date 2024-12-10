@@ -8,6 +8,9 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         """Called before building the package"""
+        
+        build_data["infer_tag"] = True
+        
         if platform.system() == "Linux":
             root = Path(self.root)
             

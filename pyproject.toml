@@ -1,11 +1,12 @@
 [build-system]
-requires = ["hatchling", "hatch-fancy-pypi-readme"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
 name = "libspectrum"
 version = "0.0.1"
 description = "Library for communication with VMK spectrometer through USB interface"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "numpy",
@@ -23,13 +24,12 @@ mkdocs = [
     "mkdocs-jupyter",
 ]
 
+[tool.hatch.build]
+reproducible = false
+
 [project.urls]
 Documentation = "https://routybor.github.io/libspectrum/"
 "Source code" = "https://github.com/Routybor/libspectrum"
-
-[tool.hatch.metadata.hooks.fancy-pypi-readme]
-content-type = "text/markdown"
-readme-file = "README.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pyspectrum"]
