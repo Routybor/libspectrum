@@ -41,7 +41,8 @@ sudo udevadm control --reload
 - Скачайте [драйвер FTDI](https://ftdichip.com/drivers/d2xx-drivers/)
 - Доступен portable установщик: [CDM212364_Setup.zip](https://ftdichip.com/wp-content/uploads/2021/08/CDM212364_Setup.zip)
 
-!!! tip [Официальный гайд FTDI по установке драйверов](https://ftdichip.com/document/installation-guides/)
+!!! tip
+    [Официальный гайд FTDI по установке драйверов](https://ftdichip.com/document/installation-guides/)
 
 ### 2️⃣ Установка зависимостей
 

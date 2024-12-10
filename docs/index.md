@@ -26,6 +26,7 @@ hide:
     - 💻 [Платформенные ограничения](dev-docs/platform-limitations.md)
     - 🔧 [UsbDevice](dev-docs/usb-device.md)
     - 🛠️ [UsbContext](dev-docs/usb-context.md)
+    - 📚 [Документация драйверов](dev-docs/driver-docs.md)
 
 ## 📊 Примеры использования
 
