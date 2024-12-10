@@ -13,7 +13,7 @@ class CustomBuildHook(BuildHookInterface):
             build_data["infer_tag"] = True
         
         if platform.system() == "Linux":
-            python_tag = f"{sys.version_info.major}-{sys.version_info.minor}" 
+            python_tag = f"{sys.version_info.major}{sys.version_info.minor}" 
             build_data["tag"] = f"{python_tag}-{python_tag}-manylinux_2_17_x86_64"
             
             root = Path(self.root)
