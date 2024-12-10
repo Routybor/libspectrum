@@ -195,6 +195,13 @@ jobs:
       id-token: write
         
     steps:
+      - name: Check version exists
+        run: |
+          if pip index versions libspectrum | grep -q "${VERSION}"; then
+            echo "Version ${VERSION} already exists on PyPI"
+            exit 1
+          fi
+
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
@@ -232,16 +239,31 @@ jobs:
       Sign the Python 🐍 distribution 📦 with Sigstore
       and upload them to GitHub Release
     needs:
-      - publish-to-pypi
+      - test
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
     steps:
-      - name: Download all the dists
+      - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
-          path: dist/
+          pattern: libspectrum-windows-*
+          path: temp/windows/
+          
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: libspectrum-linux-*
+          path: temp/linux/
+
+      - name: Collect all wheels
+        run: |
+          mkdir -p dist
+          find temp -name "*.whl" -exec cp {} dist/ \;
+          echo "Contents of dist directory:"
+          ls -la dist/
+
       - name: Sign the dists with Sigstore
         uses: sigstore/gh-action-sigstore-python@v3.0.0
         with:
