@@ -1,12 +1,12 @@
 import json
 import sys
 from dataclasses import dataclass
-from typing import Optional
+from typing import Callable, List, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .data import Data, Spectrum
+from .data import Data, Spectrum, Frame
 from .errors import ConfigurationError, LoadError, DeviceClosedError
 from .usb_device import UsbDevice
 
@@ -212,6 +212,36 @@ class Spectrometer:
             wavelength=self.__wavelengths,
             exposure=self.__config.exposure,
         )
+
+    def read_non_blocking(self, callback: Callable[[List[Data]], None], max_frames: int = None, frames_interval: int = 100):
+        """
+        Читает кадры без блокировки, используя callback функцию обратного вызова.
+
+        :param callback: Функция обратного вызова, вызываемая с каждым набором считанных данных.
+        :param max_frames: Максимальное количество кадров для считывания; None для непрерывного считывания.
+        :param frames_interval: Количество кадров для считывания перед вызовом callback функции.
+        
+        :raises DeviceClosedError: Если устройство закрыто.
+        :raises ConfigurationError: Если спектрометр не настроен.
+        """
+        self.__check_opened()
+        if not self.is_configured:
+            raise ConfigurationError("Spectrometer not configured.")
+
+        frame_count = 0
+        storage: List[Data] = []
+        while True:
+            try:
+                data = self.read_raw(frames_interval)
+                storage.append(data)
+                callback(storage[-frames_interval:])
+                frame_count += frames_interval
+
+            except Exception as e:
+                print(f"Error during non-blocking read: {e}")
+                break
+            if max_frames is not None and frame_count >= max_frames:
+                break
 
     # --------        config        --------
     @property
