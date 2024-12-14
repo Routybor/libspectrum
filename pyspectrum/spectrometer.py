@@ -8,7 +8,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from .data import Data, Spectrum, Frame
-from .errors import ConfigurationError, LoadError, DeviceClosedError
+from .errors import ConfigurationError, LoadError
 from .usb_device import UsbDevice
 
 
