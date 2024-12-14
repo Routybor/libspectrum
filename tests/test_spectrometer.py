@@ -181,7 +181,7 @@ def test_device_close(device: Spectrometer):
     device.read_raw()  # should not fail
     device.close()
     with pytest.raises(RuntimeError):
-        device.read_raw()
+        device.read()
 
 
 def test_slices():
