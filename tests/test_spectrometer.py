@@ -1,7 +1,7 @@
 import numpy as np
 import json
 import pytest
-from pyspectrum import Spectrometer, Data, FactoryConfig, DeviceClosedError, Spectrum
+from pyspectrum import Spectrometer, Data, FactoryConfig, Spectrum
 from pyspectrum.data import Frame
 
 class MockUsbDevice:
@@ -50,14 +50,17 @@ def write_calibration_data(path, wl):
     with open(path, "w") as f:
         json.dump({"wavelengths": wl}, f)
 
+
 @pytest.mark.parametrize("start", [10, 20, 30])
 @pytest.mark.parametrize("end", [40, 50, 60])
 @pytest.mark.parametrize("reverse", [True, False])
 def test_factory_config(tmp_path, start, end, reverse):
     device = create_device(tmp_path, start, end, reverse)
+    device.open()
     data = device.read_raw().intensity
     assert data.shape[1] == end - start
     assert data[0, 0] > data[0, 1] if reverse else data[0, 0] < data[0, 1]
+    device.close()
 
 @pytest.fixture()
 def device(tmp_path) -> Spectrometer:
@@ -65,13 +68,18 @@ def device(tmp_path) -> Spectrometer:
 
 @pytest.mark.parametrize("exposure", [1, 2, 3])
 def test_exposure(device: Spectrometer, exposure):
+    device.open()
     device.set_config(exposure=exposure)
     assert device.read_raw().exposure == exposure
+    device.close()
+
 
 @pytest.mark.parametrize("n_times", [1, 2, 3])
 def test_n_times(device: Spectrometer, n_times):
+    device.open()
     device.set_config(n_times=n_times)
     assert device.read_raw().intensity.shape[0] == n_times
+    device.close()
 
 def test_full_configuration(tmp_path):
     d1 = create_device(tmp_path)
@@ -95,7 +103,9 @@ def test_full_configuration(tmp_path):
         
     d1.read_dark_signal()
     assert d1.is_configured
+    d1.open()
     assert np.array_equal(d1.read().wavelength, wls)
+    d1.close()
     d1.save_dark_signal()
 
     d2 = create_device(tmp_path)
@@ -105,6 +115,9 @@ def test_full_configuration(tmp_path):
         wavelength_calibration_path=profile_path
     )
     assert d2.is_configured
+    d2.open()
+    d2.close()
+    
 
 def test_incompatible_values(tmp_path, capsys):
     d1 = create_device(tmp_path)
@@ -127,8 +140,11 @@ def test_incompatible_values(tmp_path, capsys):
 
 def test_force_read(device: Spectrometer):
     device.read_dark_signal()
+    device.open()
     s = device.read(force=True)
     assert s.wavelength is None
+    device.close()
+
 
 def test_arithmetics():
     d1 = Data(np.array([1, 2, 999]), np.array([0, 0, 1]), 3)
@@ -161,10 +177,12 @@ def test_arithmetics():
     assert np.array_equal(np.array([2, 4, 1998]), multiplies.intensity)
 
 def test_device_close(device: Spectrometer):
+    device.open()
     device.read_raw()  # should not fail
     device.close()
-    with pytest.raises(DeviceClosedError):
+    with pytest.raises(RuntimeError):
         device.read_raw()
+
 
 def test_slices():
     data = Data(
