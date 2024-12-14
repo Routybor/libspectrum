@@ -194,7 +194,7 @@ class Spectrometer:
         
         :raises RuntimeError: Если устройство не открыто.
         """
-        if self.__device == None:
+        if self.__device == None or self.__is_opened == False:
             raise RuntimeError('Device is not opened')
 
         device = self.__device
