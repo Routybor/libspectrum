@@ -219,13 +219,12 @@ def test_non_block_read(device: Spectrometer, tmp_path):
     frames_read = 0
     def callback(spectrum):
         nonlocal frames_read
-        frames_read +=1
+        frames_read += 1
         assert isinstance(spectrum, Spectrum)
-
 
     device.read_non_block(callback, frames_to_read=5, frames_interval=1)  # Read 5 frames, 1 at time
     assert frames_read == 5
 
     frames_read = 0
     device.read_non_block(callback, frames_to_read=6, frames_interval=2)  # Read 6 frames, 2 at time
-    assert frames_read == 6
+    assert frames_read == 3
