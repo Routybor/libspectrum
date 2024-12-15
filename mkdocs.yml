@@ -46,19 +46,19 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.inlinehilite
 
 nav:
   - "index.md"
   - "API": "reference.md"
   - "Примеры":
-      - "Запись спектра": "examples/led_parameters.ipynb"
-      - "Пирометр": "examples/pyrometer.ipynb"
+      - "Запись спектра": "examples/record_spectrum.ipynb"
       - "Характеристики ламп": "examples/led_parameters.ipynb"
       - "Колориметр": "examples/colorimeter.ipynb"
+      - "Визуализация спектра в реальном времени": "examples/real_time_demo.py"
   - "Документация Пользователя":
       - "Обзор": "user-docs/overview.md"
+      - "Гайд по использованию": "user-docs/guide.md"
       - "Уставка библиотеки" : "user-docs/installation.md"
       - "Класс UsbDevice": "user-docs/usb-device.md"
   - "Документация Разработчика":
@@ -67,4 +67,4 @@ nav:
       - "Платформенные ограничения" : "dev-docs/platform-limitations.md"
       - "Класс UsbDevice": "dev-docs/usb-device.md"
       - "Класс UsbContext": "dev-docs/usb-context.md"
-      - "Документация драйвверов": "dev-docs/driver-docs.md"
+      - "Документация драйверов": "dev-docs/driver-docs.md"
