@@ -12,7 +12,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../examples/led_parameters/">
+        <link rel="next" href="../examples/record_spectrum/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -217,7 +217,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../examples/led_parameters/" class="md-tabs__link">
+        <a href="../examples/record_spectrum/" class="md-tabs__link">
           
   
   Примеры
@@ -403,6 +403,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.open" class="md-nav__link">
+    <span class="md-ellipsis">
+      open
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyspectrum.Spectrometer.close" class="md-nav__link">
     <span class="md-ellipsis">
       close
@@ -451,6 +460,33 @@
   <a href="#pyspectrum.Spectrometer.read" class="md-nav__link">
     <span class="md-ellipsis">
       read
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.stop_reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      stop_reading
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.read_non_block" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_non_block
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.read_non_stop" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_non_stop
     </span>
   </a>
   
@@ -685,32 +721,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/led_parameters/" class="md-nav__link">
+      <a href="../examples/record_spectrum/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Запись спектра
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/pyrometer/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Пирометр
+    Чтение спектра и запись данных в файл
   </span>
   
 
@@ -731,7 +746,7 @@
         
   
   <span class="md-ellipsis">
-    Запись спектра
+    Характеристики ламп
   </span>
   
 
@@ -753,6 +768,27 @@
   
   <span class="md-ellipsis">
     Колориметр
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/real_time_demo.py" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Визуализация спектра в реальном времени
   </span>
   
 
@@ -819,6 +855,27 @@
   
   <span class="md-ellipsis">
     Обзор
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../user-docs/guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Гайд по использованию
   </span>
   
 
@@ -1031,7 +1088,7 @@
         
   
   <span class="md-ellipsis">
-    Документация драйвверов
+    Документация драйверов
   </span>
   
 
@@ -1096,6 +1153,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.open" class="md-nav__link">
+    <span class="md-ellipsis">
+      open
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pyspectrum.Spectrometer.close" class="md-nav__link">
     <span class="md-ellipsis">
       close
@@ -1144,6 +1210,33 @@
   <a href="#pyspectrum.Spectrometer.read" class="md-nav__link">
     <span class="md-ellipsis">
       read
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.stop_reading" class="md-nav__link">
+    <span class="md-ellipsis">
+      stop_reading
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.read_non_block" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_non_block
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pyspectrum.Spectrometer.read_non_stop" class="md-nav__link">
+    <span class="md-ellipsis">
+      read_non_stop
     </span>
   </a>
   
@@ -1384,7 +1477,7 @@
 
     <div class="doc doc-contents ">
 
-        
+        <p>При инициализации класса соединение с устройством не открывается.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1448,6 +1541,28 @@
           </tr>
       </tbody>
     </table>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyspectrum.Spectrometer.open" class="doc doc-heading">
+            <code class="highlight language-python"><span class="nb">open</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Открывает соединение с устройством.</p>
 
     </div>
 
@@ -1648,6 +1763,29 @@
       </tbody>
     </table>
 
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>RuntimeError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Если устройство не открыто.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
     </div>
 
 </div>
@@ -1661,7 +1799,7 @@
 
 
 <h3 id="pyspectrum.Spectrometer.read" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">read</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">read</span><span class="p">(</span><span class="n">n_times</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 </h3>
 
@@ -1669,6 +1807,8 @@
     <div class="doc doc-contents ">
 
         <p>Получить обработанный спектр с устройства.</p>
+<p>Если устройство еще не было открыто, открывает его автоматически и закрывает после считывания.
+Если устройство было открыто ранее, оставляет его открытым.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1698,6 +1838,22 @@
                   <code>False</code>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_times</code>
+            </td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Количество измерений. Если не указано, используется значение из конфига.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
       </tbody>
     </table>
 
@@ -1718,6 +1874,206 @@
             <td>
               <div class="doc-md-description">
                 <p>Считанный спектр</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyspectrum.Spectrometer.stop_reading" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">stop_reading</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Останавливает поток постоянного считывания спектров, если он был запущен через <code>read_non_stop</code>.</p>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyspectrum.Spectrometer.read_non_block" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">read_non_block</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">frames_to_read</span><span class="p">,</span> <span class="n">frames_interval</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Читает нужное количество кадров в неблокирующем режиме и вызывает callback-функцию для каждого считанного спектра.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>callback</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span>[[<span title="pyspectrum.data.Spectrum">Spectrum</span>], None]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>функция-callback для вызова с каждым считанным спектром.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frames_to_read</code>
+            </td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Максимальное количество кадров для считывания.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frames_interval</code>
+            </td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Кол-во кадров для считывания в одной итерации цикла.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pyspectrum.Spectrometer.read_non_stop" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">read_non_stop</span><span class="p">(</span><span class="n">callback</span><span class="p">,</span> <span class="n">frames_interval</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Непрерывно считывает спектры в отдельном потоке и вызывает callback-функцию для каждого считанного спектра.
+Для остановки чтения спектров используйте метод <code>stop_reading</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>callback</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span>[[<span title="pyspectrum.data.Spectrum">Spectrum</span>], None]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>функция-callback для вызова с каждым считанным спектром.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>frames_interval</code>
+            </td>
+            <td>
+                  <code>int</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Кол-во кадров для считывания в одной итерации цикла.</p>
+              </div>
+            </td>
+            <td>
+                  <code>100</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code>RuntimeError</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>если поток чтения уже запущен.</p>
               </div>
             </td>
           </tr>

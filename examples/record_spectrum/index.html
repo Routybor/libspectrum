@@ -9,6 +9,10 @@
       
       
       
+        <link rel="prev" href="../../reference/">
+      
+      
+        <link rel="next" href="../led_parameters/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -207,11 +211,13 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../led_parameters/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
           
   
   Примеры
@@ -347,23 +353,28 @@
       
   
   
+    
   
   
+  
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -374,7 +385,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Примеры
@@ -385,39 +396,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../led_parameters/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Запись спектра
+    Чтение спектра и запись данных в файл
   </span>
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../pyrometer/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Пирометр
-  </span>
-  
-
-      </a>
+      
     </li>
   
 
@@ -434,7 +434,7 @@
         
   
   <span class="md-ellipsis">
-    Запись спектра
+    Характеристики ламп
   </span>
   
 
@@ -456,6 +456,27 @@
   
   <span class="md-ellipsis">
     Колориметр
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../real_time_demo.py" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Визуализация спектра в реальном времени
   </span>
   
 
@@ -522,6 +543,27 @@
   
   <span class="md-ellipsis">
     Обзор
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user-docs/guide/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Гайд по использованию
   </span>
   
 
@@ -734,7 +776,7 @@
         
   
   <span class="md-ellipsis">
-    Документация драйвверов
+    Документация драйверов
   </span>
   
 
@@ -1238,7 +1280,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [1]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [4]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-1">
@@ -1251,9 +1293,9 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span> <span class="nn">pyspectrum</span> <span class="kn">import</span> <span class="n">Spectrometer</span><span class="p">,</span> <span class="n">UsbID</span><span class="p">,</span> <span class="n">Spectrum</span><span class="p">,</span> <span class="n">Data</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span> <span class="nn">pyspectrum</span> <span class="kn">import</span> <span class="n">Spectrometer</span><span class="p">,</span> <span class="n">Spectrum</span><span class="p">,</span> <span class="n">Data</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">from pyspectrum import Spectrometer, UsbID, Spectrum, Data</div>
+<div class="clipboard-copy-txt" id="cell-1">from pyspectrum import Spectrometer, Spectrum, Data</div>
 </div>
 </div>
 </div>
@@ -1265,7 +1307,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [6]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
@@ -1279,7 +1321,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Открываем устройство</span>
-<span class="n">device</span> <span class="o">=</span> <span class="n">Spectrometer</span><span class="p">(</span><span class="n">UsbID</span><span class="p">())</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">Spectrometer</span><span class="p">()</span>
 
 <span class="c1"># Настройка устройства</span>
 <span class="n">device</span><span class="o">.</span><span class="n">set_config</span><span class="p">(</span>
@@ -1292,7 +1334,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="n">device</span><span class="o">.</span><span class="n">read_dark_signal</span><span class="p">(</span><span class="n">n_times</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2"># Открываем устройство
-device = Spectrometer(UsbID())
+device = Spectrometer()
 
 # Настройка устройства
 device.set_config(
@@ -1327,7 +1369,7 @@ device.read_dark_signal(n_times=1000) </div>
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [5]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [3]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
 <clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
