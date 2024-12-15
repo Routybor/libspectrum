@@ -2,7 +2,7 @@ import json
 import sys
 from dataclasses import dataclass
 import threading
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -257,7 +257,7 @@ class Spectrometer:
         """
         self.__stop_reading_flag = True
         if self.__reading_thread and self.__reading_thread.is_alive():
-            self.__reading_thread.join() # Wait for the thread to finish if is not None
+            self.__reading_thread.join()
         self.__reading_thread = None
     
     def _reset_stop_reading(self):
