@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - non-blocking-mode
     tags:
       - 'v*'
   workflow_dispatch:

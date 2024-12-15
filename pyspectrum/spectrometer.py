@@ -1,13 +1,14 @@
 import json
 import sys
 from dataclasses import dataclass
-from typing import Optional
+import threading
+from typing import Callable, List, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 
-from .data import Data, Spectrum
-from .errors import ConfigurationError, LoadError, DeviceClosedError
+from .data import Data, Spectrum, Frame
+from .errors import ConfigurationError, LoadError
 from .usb_device import UsbDevice
 
 
@@ -29,7 +30,7 @@ class FactoryConfig:
     def load(path: str) -> 'FactoryConfig':
         """
         Загружает заводские настройки из файла.
-        
+
         :param path: Путь к файлу заводских настроек
         :type path: str
         :return: Объект заводских настроек
@@ -47,7 +48,7 @@ class FactoryConfig:
     def default() -> 'FactoryConfig':
         """
         Создаёт заводские настройки для тестрирования.
-        
+
         :return: Объект заводских настроек
         :rtype: FactoryConfig
         """
@@ -55,7 +56,7 @@ class FactoryConfig:
             2050,
             3850,
             True,
-            1.220703125,
+            1.0,
         )
 
 
@@ -73,35 +74,54 @@ class Spectrometer:
 
     def __init__(self, vendor=0x0403, product=0x6014, factory_config: FactoryConfig = FactoryConfig.default()):
         """
+        При инициализации класса соединение с устройством не открывается.
+
         :param int vendor: Идентификатор производителя.
         :param int product: Идентификатор продукта.
         :param factory_config: Заводские настройки
         :type factory_config: FactoryConfig
         """
-        self.__device: UsbDevice = UsbDevice(vendor=vendor, product=product)
+        self.__device = None
+        self.__vendor = vendor
+        self.__product = product
         self.__factory_config = factory_config
         self.__config = Config()
-        self.__device.set_timer(self.__config.exposure)
         self.__dark_signal: Data | None = None
         self.__wavelengths: NDArray[float] | None = None
 
-    def __check_opened(self):
-        if not self.__device.is_opened:
-            raise DeviceClosedError()
+        
+        self.running = False
+        self.__is_opened = False
+
+        self.__stop_reading_flag = False
+        self.__reading_thread: Optional[threading.Thread] = None
+
+    def open(self):
+        """
+        Открывает соединение с устройством.
+        """
+        if self.__is_opened:
+            return
+            
+        self.__device: UsbDevice = UsbDevice(vendor=self.__vendor, product=self.__product)
+        self.__device.set_timer(self.__config.exposure)
+        self.__is_opened = True
 
     def close(self) -> None:
         """
         Закрывает соединение с устройством.
         """
+        if not self.__is_opened:
+           return 
+        
         self.__device.close()
-
-    # --------        dark signal        --------
+        self.__is_opened = False
 
     @property
     def dark_signal(self) -> Data | None:
         """
         Возвращает текущий темновой сигнал.
-        
+
         :rtype: Data | None
         """
         return self.__dark_signal
@@ -129,7 +149,14 @@ class Spectrometer:
         :param n_times: Количество измерений. При обработке данных будет использовано среднее значение
         :type n_timess: int | None
         """
-        self.__dark_signal = self.read_raw(n_times)
+        is_opened = self.__is_opened
+        try:
+            if not is_opened:
+               self.open() 
+            self.__dark_signal = self.read_raw(n_times)
+        finally:
+            if not is_opened:
+               self.close()
 
     def save_dark_signal(self):
         """
@@ -142,7 +169,6 @@ class Spectrometer:
 
         self.__dark_signal.save(self.__config.dark_signal_path)
 
-    # --------        wavelength calibration        --------
     def __load_wavelength_calibration(self, path: str) -> None:
         factory_config = self.__factory_config
 
@@ -156,18 +182,20 @@ class Spectrometer:
         self.__wavelengths = wavelengths
         eprint('Wavelength calibration loaded')
 
-    # --------        read raw        --------
     def read_raw(self, n_times: Optional[int] = None) -> Data:
         """
         Получить сырые данные с устройства.
-        
+
         :param n_times: Количество измерений.
         :type n_timess: int | None
 
         :return: Данные с устройства.
         :rtype: Data
+        
+        :raises RuntimeError: Если устройство не открыто.
         """
-        self.__check_opened()
+        if self.__device == None or self.__is_opened == False:
+            raise RuntimeError('Device is not opened')
 
         device = self.__device
         config = self.__config
@@ -188,13 +216,16 @@ class Spectrometer:
             exposure=config.exposure,
         )
 
-    # --------        read        --------
-    def read(self, force: bool = False) -> Spectrum:
+    def read(self, n_times: Optional[int] = None, force: bool = False) -> Spectrum:
         """
         Получить обработанный спектр с устройства.
+        
+        Если устройство еще не было открыто, открывает его автоматически и закрывает после считывания.
+        Если устройство было открыто ранее, оставляет его открытым.
 
         :param bool force: Если ``True``, позволяет считать сигнал без калибровки по длина волн
-        
+        :param int n_times: Количество измерений. Если не указано, используется значение из конфига.
+
         :return: Считанный спектр
         :rtype: Spectrum
         """
@@ -203,15 +234,83 @@ class Spectrometer:
         if self.__dark_signal is None:
             raise ConfigurationError('Dark signal is not loaded')
 
-        data = self.read_raw()
-        scale = self.__factory_config.intensity_scale
-        return Spectrum(
-            intensity=(data.intensity / scale - np.round(
-                np.mean(self.__dark_signal.intensity / scale, axis=0))) * scale,
-            clipped=data.clipped,
-            wavelength=self.__wavelengths,
-            exposure=self.__config.exposure,
-        )
+        is_opened = self.__is_opened
+        try:
+            if not is_opened:
+               self.open()
+            data = self.read_raw(n_times)
+            scale = self.__factory_config.intensity_scale
+            return Spectrum(
+                intensity=(data.intensity / scale - np.round(
+                    np.mean(self.__dark_signal.intensity / scale, axis=0))) * scale,
+                clipped=data.clipped,
+                wavelength=self.__wavelengths,
+                exposure=self.__config.exposure,
+            )
+        finally:
+            if not is_opened:
+               self.close()
+
+    def stop_reading(self):
+        """
+        Останавливает поток постоянного считывания спектров, если он был запущен через `read_non_stop`.  
+        """
+        self.__stop_reading_flag = True
+        if self.__reading_thread and self.__reading_thread.is_alive():
+            self.__reading_thread.join() # Wait for the thread to finish if is not None
+        self.__reading_thread = None
+    
+    def _reset_stop_reading(self):
+        self.__stop_reading_flag = False
+
+    def read_non_block(self, callback: Callable[[Spectrum], None], frames_to_read: int, frames_interval: int = 100):
+        """
+        Читает нужное количество кадров в неблокирующем режиме и вызывает callback-функцию для каждого считанного спектра.
+        
+        :param callback: функция-callback для вызова с каждым считанным спектром.
+        :param frames_to_read: Максимальное количество кадров для считывания.
+        :param frames_interval: Кол-во кадров для считывания в одной итерации цикла.
+        """
+
+        if not self.is_configured:
+            raise ConfigurationError("Spectrometer not configured.")
+        
+        is_opened = self.__is_opened
+        try:
+            if not is_opened:
+                   self.open()
+            self._reset_stop_reading()
+            read_frames = 0
+            while (frames_to_read is None or read_frames < frames_to_read) and not self.__stop_reading_flag:
+                spectrum = self.read(n_times=frames_interval)
+                read_frames += frames_interval
+                if spectrum is None:
+                    break
+
+                try:
+                    callback(spectrum)
+                except Exception as e:
+                    eprint(f"Error in callback: {e}")
+                    break
+        finally:
+            if not is_opened:
+                   self.close()
+
+    def read_non_stop(self, callback: Callable[[Spectrum], None], frames_interval: int = 100):
+        """
+        Непрерывно считывает спектры в отдельном потоке и вызывает callback-функцию для каждого считанного спектра.
+        Для остановки чтения спектров используйте метод `stop_reading`.
+
+        :param callback: функция-callback для вызова с каждым считанным спектром.
+        :param frames_interval: Кол-во кадров для считывания в одной итерации цикла.
+        :raises RuntimeError: если поток чтения уже запущен.
+        """
+
+        if self.__reading_thread and self.__reading_thread.is_alive():
+             raise RuntimeError("Reading thread is already running")
+        
+        self.__reading_thread = threading.Thread(target=self.read_non_block, args=(callback, None, frames_interval))
+        self.__reading_thread.start()
 
     # --------        config        --------
     @property
@@ -253,9 +352,7 @@ class Spectrometer:
         :type wavelength_calibration_path: str | None
         """
         if (exposure is not None) and (exposure != self.__config.exposure):
-            self.__check_opened()
             self.__config.exposure = exposure
-            self.__device.set_timer(self.__config.exposure)
 
             if self.__dark_signal is not None:
                 self.__dark_signal = None

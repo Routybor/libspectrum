@@ -11,7 +11,3 @@ class MeasurementIncompatibleError(Exception):
 class ConfigurationError(Exception):
     def __int__(self, what: str):
         super().__init__(what)
-
-
-class DeviceClosedError(Exception):
-    pass
