@@ -1,6 +1,7 @@
 import struct
 import time
 import numpy as np
+import logging
 
 from .data import Frame
 from .usb_context import UsbContext
@@ -16,6 +17,15 @@ CMD_SUCCESS = 0x2B
 CMD_FAILURE = 0x2D
 CMD_UNKNOWN = 0x3F
 
+logging.basicConfig(
+    filename='app.log',
+    filemode='w',
+    format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logger = logging.getLogger(__name__)
 
 class UsbDevice:
     """
@@ -58,6 +68,7 @@ class UsbDevice:
             raise RuntimeError("Device is not opened.")
         self.context.close()
         self._opened = False
+        logger.debug("Closed USBDevice connection.")
 
     @property
     def is_opened(self) -> bool:
@@ -118,20 +129,27 @@ class UsbDevice:
         magic, ans_code, _, seq_number, _ = struct.unpack('<4sBBH2s', ans)
 
         if magic != b'#ANS':
-            raise RuntimeError(f"Received bad answer magic: {magic}")
+            logger.error(f"Received bad answer magic: {magic}", exc_info=True)
+            raise RuntimeError
         elif seq_number != self._sequence_number:
-            raise RuntimeError(
+            logger.error(
                 f"SEQ_NUMBER number mismatch: sent {self._sequence_number}, "
-                f"received {seq_number}"
+                f"received {seq_number}",
+                exc_info=True
             )
+            raise RuntimeError
         elif ans_code == CMD_FAILURE:
-            raise RuntimeError("Command was not completed")
+            logger.error("Command was not completed", exc_info=True)
+            raise RuntimeError
         elif ans_code == CMD_UNKNOWN:
-            raise RuntimeError(f"Unknown command: {code}")
+            logger.error(f"Unknown command: {code}", exc_info=True)
+            raise RuntimeError
         elif ans_code != CMD_SUCCESS:
-            raise RuntimeError(f"Unexpected command status: {ans_code}")
+            logger.error(f"Unexpected command status: {ans_code}", exc_info=True)
+            raise RuntimeError
 
         self._sequence_number = (self._sequence_number + 1) & 0xFFFF # stay in 16 bits range
+        logger.debug(f"Successfully executed command with code: {code}.")
         return ans
 
     def set_timer(self, millis: int):
@@ -166,10 +184,12 @@ class UsbDevice:
             exponent += 1
             millis //= 10
         if exponent >= 4:
-            raise ValueError("Exposure too large")
+            logger.error("Exposure too large", exc_info=True)
+            raise ValueError
 
         command_data = millis | (exponent << 16)
         self._send_command(CMD_CODE_WRITE_TIMER, command_data)
+        logger.debug(f"Set timer for {millis}ms exposure.")
 
     def _read_exact(self, amount: int) -> bytes:
         """
@@ -188,7 +208,9 @@ class UsbDevice:
 
             current_time = time.monotonic_ns()
             if (current_time - last_successful_read > self._read_timeout * 1_000_000):
-                raise RuntimeError("Device read timeout")
+                logger.error("Device read timeout", exc_info=True)
+                raise RuntimeError
+        logger.debug(f"Read exact {amount} bytes from device.")
         return bytes(buffer)
 
     def _read_data(self, amount: int) -> bytes:
@@ -214,14 +236,17 @@ class UsbDevice:
             magic, length = struct.unpack('<4sH', header)
 
             if magic != b'#DAT':
-                raise RuntimeError("Received bad #DAT magic from device")
+                logger.error("Received bad #DAT magic from device", exc_info=True)
+                raise RuntimeError
 
             if length > (amount - data_read):
+                logger.error("Trying to read more data than expected", exc_info=True)
                 raise ValueError("Trying to read more data than expected")
 
             buffer[data_read:data_read+length] = self._read_exact(length)
             data_read += length
 
+        logger.debug(f"Read {data_read} bytes of data from device.")
         return bytes(buffer)
 
     def read_frame(self, n_times: int) -> Frame:
@@ -254,4 +279,5 @@ class UsbDevice:
         samples = samples ^ (1 << 15)
         clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
 
+        logger.debug(f"Read frame with {n_times} accumulations and {pixel_count} pixels.")
         return Frame(samples=samples, clipped=clipped)

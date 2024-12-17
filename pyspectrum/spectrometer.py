@@ -3,6 +3,7 @@ import sys
 from dataclasses import dataclass
 import threading
 from typing import Callable, Optional
+import logging
 
 import numpy as np
 from numpy.typing import NDArray
@@ -11,6 +12,15 @@ from .data import Data, Spectrum, Frame
 from .errors import ConfigurationError, LoadError
 from .usb_device import UsbDevice
 
+logging.basicConfig(
+    filename='app.log',
+    filemode='w',
+    format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logger = logging.getLogger(__name__)
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -130,18 +140,18 @@ class Spectrometer:
         try:
             data = Data.load(self.__config.dark_signal_path)
         except Exception:
-            eprint('Dark signal file is invalid or does not exist, dark signal was NOT loaded')
+            logger.error('Dark signal file is invalid or does not exist, dark signal was NOT loaded')
             return
 
         if data.shape[1] != (self.__factory_config.end - self.__factory_config.start):
-            eprint("Saved dark signal has different shape, dark signal was NOT loaded")
+            logger.error("Saved dark signal has different shape, dark signal was NOT loaded")
             return
         if data.exposure != self.__config.exposure:
-            eprint('Saved dark signal has different exposure, dark signal was NOT loaded')
+            logger.error('Saved dark signal has different exposure, dark signal was NOT loaded')
             return
 
         self.__dark_signal = data
-        eprint('Dark signal loaded')
+        logger.info('Dark signal loaded')
 
     def read_dark_signal(self, n_times: Optional[int] = None) -> None:
         """
@@ -163,10 +173,11 @@ class Spectrometer:
         Сохраняет темновой сигнал в файл.
         """
         if self.__config.dark_signal_path is None:
-            raise ConfigurationError('Dark signal path is not set')
+            logger.error('Dark signal path is not set', exc_info=True)
+            raise ConfigurationError
         if self.__dark_signal is None:
-            raise ConfigurationError('Dark signal is not loaded')
-
+            logger.error('Dark signal is not loaded', exc_info=True)
+            raise ConfigurationError
         self.__dark_signal.save(self.__config.dark_signal_path)
 
     def __load_wavelength_calibration(self, path: str) -> None:
@@ -177,10 +188,11 @@ class Spectrometer:
 
         wavelengths = np.array(data['wavelengths'], dtype=float)
         if len(wavelengths) != (factory_config.end - factory_config.start):
-            raise ValueError("Wavelength calibration data has incorrect number of pixels")
+            logger.error("Wavelength calibration data has incorrect number of pixels", exc_info=True)
+            raise ValueError
 
         self.__wavelengths = wavelengths
-        eprint('Wavelength calibration loaded')
+        logger.info('Wavelength calibration loaded')
 
     def read_raw(self, n_times: Optional[int] = None) -> Data:
         """
@@ -195,7 +207,8 @@ class Spectrometer:
         :raises RuntimeError: Если устройство не открыто.
         """
         if self.__device == None or self.__is_opened == False:
-            raise RuntimeError('Device is not opened')
+            logger.error('Device is not opened', exc_info=True)
+            raise RuntimeError
 
         device = self.__device
         config = self.__config
@@ -230,9 +243,11 @@ class Spectrometer:
         :rtype: Spectrum
         """
         if self.__wavelengths is None and not force:
-            raise ConfigurationError('Wavelength calibration is not loaded')
+            logger.error('Wavelength calibration is not loaded', exc_info=True)
+            raise ConfigurationError
         if self.__dark_signal is None:
-            raise ConfigurationError('Dark signal is not loaded')
+            logger.error('Dark signal is not loaded', exc_info=True)
+            raise ConfigurationError
 
         is_opened = self.__is_opened
         try:
@@ -273,7 +288,8 @@ class Spectrometer:
         """
 
         if not self.is_configured:
-            raise ConfigurationError("Spectrometer not configured.")
+            logger.error("Spectrometer not configured.", exc_info=True)
+            raise ConfigurationError
         
         is_opened = self.__is_opened
         try:
@@ -290,7 +306,7 @@ class Spectrometer:
                 try:
                     callback(spectrum)
                 except Exception as e:
-                    eprint(f"Error in callback: {e}")
+                    logger.error(f"Error in callback: {e}")
                     break
         finally:
             if not is_opened:
@@ -307,7 +323,8 @@ class Spectrometer:
         """
 
         if self.__reading_thread and self.__reading_thread.is_alive():
-             raise RuntimeError("Reading thread is already running")
+             logger.error("Reading thread is already running", exc_info=True)
+             raise RuntimeError
         
         self.__reading_thread = threading.Thread(target=self.read_non_block, args=(callback, None, frames_interval))
         self.__reading_thread.start()

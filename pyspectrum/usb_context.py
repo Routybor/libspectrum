@@ -1,4 +1,16 @@
+import logging
 import ftd2xx as ftd
+
+# Настройка логгера
+logging.basicConfig(
+    filename='app.log',
+    filemode='w',
+    format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logger = logging.getLogger(__name__)
 
 
 class UsbContext:
@@ -24,10 +36,14 @@ class UsbContext:
         
         :raises RuntimeError: Если устройство не найдено или невозможно его открыть.
         """
+        logger.info('Attempt to open FTDI device')
         self.device = ftd.open()
 
         if not self.device:
-            raise RuntimeError("Failed to open device")
+            logger.error("Failed to open device", exc_info=True)
+            raise RuntimeError
+        else:
+            logger.info('FTDI device opened successfully')
 
     def close(self):
         """
@@ -35,6 +51,7 @@ class UsbContext:
         """
         if self.device:
             self.device.close()
+            logger.info('FTDI device closed')
 
     def set_bitmode(self, mask, enable):
         """
@@ -43,7 +60,13 @@ class UsbContext:
         :param mask: Маска для установки режима работы пинов.
         :param enable: Режим работы FTDI чипа (0x40 - 245 FIFO Mode)
         """
-        self.device.setBitMode(mask, enable)
+        try:
+            logger.info(f'Setting bitmode {enable} for mask {mask}')
+            self.device.setBitMode(mask, enable)
+            logger.info('Bitmode set successfully')
+        except Exception as e:
+            logger.error(f'Error occured during setting bitmode: {e}', exc_info=True)
+            raise RuntimeError
 
     def set_timeouts(self, read_timeout_millis: int, write_timeout_millis: int):
         """
@@ -52,7 +75,13 @@ class UsbContext:
         :param read_timeout_millis: Таймаут чтения в миллисекундах.
         :param write_timeout_millis: Таймаут записи в миллисекундах.
         """
-        self.device.setTimeouts(read_timeout_millis, write_timeout_millis)
+        try:
+            logger.info(f'Setting timeouts: reading {read_timeout_millis} ms, writing {write_timeout_millis} ms')
+            self.device.setTimeouts(read_timeout_millis, write_timeout_millis)
+            logger.info('Timeouts set successfully')
+        except Exception as e:
+            logger.error(f'Error occured during setting timeouts: {e}', exc_info=True)
+            raise RuntimeError
 
     def read(self, size) -> bytes:
         """
@@ -63,9 +92,11 @@ class UsbContext:
         :raises RuntimeError: Если произошла ошибка при чтении данных.
         """
         try:
+            logger.info(f'Reading {size} bytes from device')
             return self.device.read(size)
-        except Exception:
-            raise RuntimeError("Device read error")
+        except Exception as e:
+            logger.error(f'Device read error: {e}')
+            raise RuntimeError
 
     def write(self, data: bytes) -> int:
         """
@@ -76,6 +107,8 @@ class UsbContext:
         :raises RuntimeError: Если произошла ошибка при записи данных.
         """
         try:
+            logger.info(f'Writing {len(data)} bytes in device')
             return self.device.write(data)
-        except Exception:
-            raise RuntimeError("Device write error")
+        except Exception as e:
+            logger.error(f'Device write error: {e}', exc_info=True)
+            raise RuntimeError
