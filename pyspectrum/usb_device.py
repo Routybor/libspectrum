@@ -68,6 +68,7 @@ class UsbDevice:
             raise RuntimeError("Device is not opened.")
         self.context.close()
         self._opened = False
+        logger.debug("Closed USBDevice connection.")
 
     @property
     def is_opened(self) -> bool:
@@ -148,6 +149,7 @@ class UsbDevice:
             raise RuntimeError
 
         self._sequence_number = (self._sequence_number + 1) & 0xFFFF # stay in 16 bits range
+        logger.debug(f"Successfully executed command with code: {code}.")
         return ans
 
     def set_timer(self, millis: int):
@@ -187,6 +189,7 @@ class UsbDevice:
 
         command_data = millis | (exponent << 16)
         self._send_command(CMD_CODE_WRITE_TIMER, command_data)
+        logger.debug(f"Set timer for {millis}ms exposure.")
 
     def _read_exact(self, amount: int) -> bytes:
         """
@@ -207,6 +210,7 @@ class UsbDevice:
             if (current_time - last_successful_read > self._read_timeout * 1_000_000):
                 logger.error("Device read timeout", exc_info=True)
                 raise RuntimeError
+        logger.debug(f"Read exact {amount} bytes from device.")
         return bytes(buffer)
 
     def _read_data(self, amount: int) -> bytes:
@@ -237,11 +241,12 @@ class UsbDevice:
 
             if length > (amount - data_read):
                 logger.error("Trying to read more data than expected", exc_info=True)
-                raise ValueError
+                raise ValueError("Trying to read more data than expected")
 
             buffer[data_read:data_read+length] = self._read_exact(length)
             data_read += length
 
+        logger.debug(f"Read {data_read} bytes of data from device.")
         return bytes(buffer)
 
     def read_frame(self, n_times: int) -> Frame:
@@ -274,4 +279,5 @@ class UsbDevice:
         samples = samples ^ (1 << 15)
         clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
 
+        logger.debug(f"Read frame with {n_times} accumulations and {pixel_count} pixels.")
         return Frame(samples=samples, clipped=clipped)
