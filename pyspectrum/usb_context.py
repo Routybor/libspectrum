@@ -1,5 +1,15 @@
 import ftd2xx as ftd
+import logging
 
+logging.basicConfig(
+    filename='app.log',
+    filemode='w',
+    format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logger = logging.getLogger(__name__)
 
 class UsbContext:
     """
@@ -26,7 +36,10 @@ class UsbContext:
         """
         self.device = ftd.open()
 
-        if not self.device:
+        if self.device:
+            logger.info(f"opened device {self.device.getDeviceInfo}")
+        else:
+            logger.error("DeviceOpenFail", exc_info=True)
             raise RuntimeError("Failed to open device")
 
     def close(self):
@@ -35,6 +48,7 @@ class UsbContext:
         """
         if self.device:
             self.device.close()
+            logger.info("device closed")
 
     def set_bitmode(self, mask, enable):
         """
