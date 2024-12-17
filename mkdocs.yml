@@ -68,3 +68,4 @@ nav:
       - "Класс UsbDevice": "dev-docs/usb-device.md"
       - "Класс UsbContext": "dev-docs/usb-context.md"
       - "Документация драйверов": "dev-docs/driver-docs.md"
+      - "Документация команд устройства": "dev-docs/cmd.md"

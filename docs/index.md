@@ -28,6 +28,7 @@ hide:
     - 🔧 [UsbDevice](dev-docs/usb-device.md)
     - 🛠️ [UsbContext](dev-docs/usb-context.md)
     - 📚 [Документация драйверов](dev-docs/driver-docs.md)
+    - 📖 [Документация команд устройства](dev-docs/cmd.md)
 
 ## 📊 Примеры использования
 
