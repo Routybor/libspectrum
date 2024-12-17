@@ -1,6 +1,7 @@
 import struct
 import time
 import numpy as np
+import logging
 
 from .data import Frame
 from .usb_context import UsbContext
@@ -16,6 +17,15 @@ CMD_SUCCESS = 0x2B
 CMD_FAILURE = 0x2D
 CMD_UNKNOWN = 0x3F
 
+logging.basicConfig(
+    filename='app.log',
+    filemode='w',
+    format='%(asctime)s %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    level=logging.DEBUG
+)
+
+logger = logging.getLogger(__name__)
 
 class UsbDevice:
     """
