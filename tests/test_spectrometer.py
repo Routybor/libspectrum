@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import json
 import pytest
@@ -27,6 +28,45 @@ class MockUsbDevice:
         
     def close(self):
         self._opened = False
+
+def mock_producer_process(self, data_queue, error_queue, stop_event, frames_per_read):
+    """Mock producer that generates test data without requiring a real device"""
+    try:
+        import numpy as np
+        import queue
+        import time
+        from pyspectrum.data import Spectrum
+        
+        wavelengths = getattr(self, '_wavelengths', np.linspace(400, 700, 10))
+        
+        while not stop_event.is_set():
+            try:
+                intensity = np.random.rand(frames_per_read, len(wavelengths)) * 1000
+                clipped = np.zeros_like(intensity, dtype=bool)
+                
+                spectrum = Spectrum(
+                    intensity=intensity,
+                    clipped=clipped,
+                    wavelength=wavelengths,
+                    exposure=100
+                )
+                
+                data_queue.put(spectrum, timeout=1.0)
+                time.sleep(0.05)
+            except queue.Full:
+                continue
+            except Exception as e:
+                error_queue.put(str(e))
+                break
+    except Exception as e:
+        error_queue.put(str(e))
+
+# Only patch on Windows
+@pytest.fixture(autouse=True)
+def patch_multiprocessing(monkeypatch):
+    if sys.platform.startswith('win'):
+        from pyspectrum.spectrometer import Spectrometer
+        monkeypatch.setattr(Spectrometer, '_producer_process', mock_producer_process)
 
 # Mock the UsbDevice import in spectrometer module
 @pytest.fixture(autouse=True)
@@ -215,30 +255,29 @@ def test_continuous_read(device: Spectrometer, tmp_path):
     device.set_config(dark_signal_path=dark_signal_path, wavelength_calibration_path=profile_path)
     device.read_dark_signal()
 
-    frames_read = 0
+    batches_read = 0
     def callback(spectrum):
-        nonlocal frames_read
-        frames_read += 1
+        nonlocal batches_read
+        batches_read += 1
         assert isinstance(spectrum, Spectrum)
 
     device.read_continuous(callback, frames_to_read=5, frames_per_read=1)
     
     max_wait = 10
     start_time = time.time()
-    while frames_read < 5 and time.time() - start_time < max_wait:
+    while batches_read < 5 and time.time() - start_time < max_wait:
         time.sleep(0.1)
     
-    assert frames_read == 5
+    assert batches_read == 5
     
-    frames_read = 0
+    batches_read = 0
     device.read_continuous(callback, frames_to_read=6, frames_per_read=2)
     
     start_time = time.time()
-    while frames_read < 3 and time.time() - start_time < max_wait:
+    while batches_read < 3 and time.time() - start_time < max_wait:
         time.sleep(0.1)
 
-    assert frames_read == 3
-
+    assert batches_read == 3
 
 def test_stop_continuous_read(device: Spectrometer, tmp_path):
     """Test that we can stop continuous reading"""
@@ -249,18 +288,18 @@ def test_stop_continuous_read(device: Spectrometer, tmp_path):
     device.set_config(dark_signal_path=dark_signal_path, wavelength_calibration_path=profile_path)
     device.read_dark_signal()
 
-    frames_read = 0
+    batches_read = 0
     def callback(spectrum):
-        nonlocal frames_read
-        frames_read += 1
+        nonlocal batches_read
+        batches_read += 1
         time.sleep(0.1)
 
     device.read_continuous(callback, frames_to_read=None, frames_per_read=1)
     
     time.sleep(0.5)
     device.stop_continuous_reading()
-    frames_after_stop = frames_read
+    frames_after_stop = batches_read
     time.sleep(0.5)
     
-    assert frames_read == frames_after_stop
-    assert frames_read > 0
+    assert batches_read == frames_after_stop
+    assert batches_read > 0
