@@ -275,6 +275,15 @@ class Spectrometer:
         self._stop_event = multiprocessing.Event()
         self._frame_count = multiprocessing.Value('i', 0)
         
+        self._producer_process_instance = multiprocessing.Process(
+            target=self._producer_process,
+            args=(self._data_queue, self._error_queue, self._stop_event, frames_per_read)
+        )
+        self._producer_process_instance.daemon = True
+        self._producer_process_instance.start()
+        
+        self._callback = callback
+        
         self._consumer_thread_instance = threading.Thread(
             target=self._consumer_thread,
             args=(self._data_queue, self._error_queue, self._stop_event, 
@@ -282,15 +291,6 @@ class Spectrometer:
         )
         self._consumer_thread_instance.daemon = True
         self._consumer_thread_instance.start()
-        
-        self._callback = callback
-        
-        self._producer_process_instance = multiprocessing.Process(
-            target=self._producer_process,
-            args=(self._data_queue, self._error_queue, self._stop_event, frames_per_read)
-        )
-        self._producer_process_instance.daemon = True
-        self._producer_process_instance.start()
         
     def _producer_process(self, data_queue, error_queue, stop_event, frames_per_read):
         """
