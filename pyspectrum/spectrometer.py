@@ -273,6 +273,8 @@ class Spectrometer:
             self.stop_continuous_reading()
         self._reading_completed = False
         
+        self._callback = callback
+        
         self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
         self._error_queue = multiprocessing.Queue()
         self._stop_event = multiprocessing.Event()
@@ -280,7 +282,7 @@ class Spectrometer:
         
         self._consumer_thread_instance = threading.Thread(
             target=self._consumer_thread,
-            args=(callback, self._data_queue, self._error_queue, self._stop_event, 
+            args=(self._data_queue, self._error_queue, self._stop_event, 
                 self._frame_count, frames_per_read, frames_to_read)
         )
         self._consumer_thread_instance.daemon = True
@@ -319,7 +321,7 @@ class Spectrometer:
         finally:
             self.close()
             
-    def _consumer_thread(self, callback, data_queue, error_queue, stop_event, 
+    def _consumer_thread(self, data_queue, error_queue, stop_event, 
                         frame_count, frames_per_read, frames_to_read=None):
         """
         Функция, которая работает в потоке основного процесса для выполнения обратных вызовов.
@@ -331,6 +333,7 @@ class Spectrometer:
         :param frame_count: Value для отслеживания количества прочитанных кадров.
         :param frames_per_read: Кол-во кадров для считывания в одной итерации цикла.
         """
+        callback = self._callback
         while not stop_event.is_set():
             
             if frames_to_read is not None and frame_count.value >= frames_to_read:
