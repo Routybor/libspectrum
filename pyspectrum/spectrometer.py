@@ -269,6 +269,10 @@ class Spectrometer:
         if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
             raise RuntimeError("Reading process is already running")
         
+        if hasattr(self, '_reading_completed') and self._reading_completed:
+            self.stop_continuous_reading()
+        self._reading_completed = False
+        
         self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
         self._error_queue = multiprocessing.Queue()
         self._stop_event = multiprocessing.Event()
@@ -331,6 +335,7 @@ class Spectrometer:
             
             if frames_to_read is not None and frame_count.value >= frames_to_read:
                 stop_event.set()
+                self._reading_completed = True
                 break
             
             try:
@@ -362,7 +367,7 @@ class Spectrometer:
         """
         Останавливает непрерывное чтение, запущенное через read_continious, gracefully.
         """
-        if hasattr(self, '_stop_event') and self._stop_event:
+        if hasattr(self, '_stop_event') and self._stop_event and not self._reading_completed:
             self._stop_event.set()
         
         if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
