@@ -206,9 +206,8 @@ def test_slices():
     assert np.array_equal(data[1:,1:2].intensity, np.array([[23], [15]]))
     assert np.array_equal(data[1:].wavelength, data.wavelength)
     assert np.array_equal(data[:,1:].wavelength, np.array([101, 102]))
-
-
-def test_non_block_read(device: Spectrometer, tmp_path):
+    
+def test_continuous_read(device: Spectrometer, tmp_path):
     profile_path = str(tmp_path / 'profile.json')
     dark_signal_path = str(tmp_path / 'dark')
     wls = np.arange(0, 10, 1)
@@ -222,9 +221,46 @@ def test_non_block_read(device: Spectrometer, tmp_path):
         frames_read += 1
         assert isinstance(spectrum, Spectrum)
 
-    device.read_non_block(callback, frames_to_read=5, frames_interval=1)  # Read 5 frames, 1 at time
+    device.read_continuous(callback, frames_to_read=5, frames_per_read=1)
+    
+    max_wait = 10
+    start_time = time.time()
+    while frames_read < 5 and time.time() - start_time < max_wait:
+        time.sleep(0.1)
+    
     assert frames_read == 5
+    
+    frames_read = 0
+    device.read_continuous(callback, frames_to_read=6, frames_per_read=2)
+    
+    start_time = time.time()
+    while frames_read < 3 and time.time() - start_time < max_wait:
+        time.sleep(0.1)
+
+    assert frames_read == 3
+
+
+def test_stop_continuous_read(device: Spectrometer, tmp_path):
+    """Test that we can stop continuous reading"""
+    profile_path = str(tmp_path / 'profile.json')
+    dark_signal_path = str(tmp_path / 'dark')
+    wls = np.arange(0, 10, 1)
+    write_calibration_data(profile_path, wls.tolist())
+    device.set_config(dark_signal_path=dark_signal_path, wavelength_calibration_path=profile_path)
+    device.read_dark_signal()
 
     frames_read = 0
-    device.read_non_block(callback, frames_to_read=6, frames_interval=2)  # Read 6 frames, 2 at time
-    assert frames_read == 3
+    def callback(spectrum):
+        nonlocal frames_read
+        frames_read += 1
+        time.sleep(0.1)
+
+    device.read_continuous(callback, frames_to_read=None, frames_per_read=1)
+    
+    time.sleep(0.5)
+    device.stop_continuous_reading()
+    frames_after_stop = frames_read
+    time.sleep(0.5)
+    
+    assert frames_read == frames_after_stop
+    assert frames_read > 0
