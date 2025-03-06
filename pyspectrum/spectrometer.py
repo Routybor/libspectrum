@@ -95,9 +95,6 @@ class Spectrometer:
         self.running = False
         self.__is_opened = False
 
-        self.__stop_reading_flag = False
-        self.__reading_thread: Optional[threading.Thread] = None
-
     def open(self):
         """
         Открывает соединение с устройством.
@@ -273,8 +270,6 @@ class Spectrometer:
             self.stop_continuous_reading()
         self._reading_completed = False
         
-        self._callback = callback
-        
         self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
         self._error_queue = multiprocessing.Queue()
         self._stop_event = multiprocessing.Event()
@@ -287,6 +282,8 @@ class Spectrometer:
         )
         self._consumer_thread_instance.daemon = True
         self._consumer_thread_instance.start()
+        
+        self._callback = callback
         
         self._producer_process_instance = multiprocessing.Process(
             target=self._producer_process,
