@@ -277,7 +277,7 @@ class Spectrometer:
         self._consumer_thread_instance = threading.Thread(
             target=self._consumer_thread,
             args=(callback, self._data_queue, self._error_queue, self._stop_event, 
-                self._frame_count, frames_to_read, frames_per_read)
+                self._frame_count, frames_per_read, frames_to_read)
         )
         self._consumer_thread_instance.daemon = True
         self._consumer_thread_instance.start()
