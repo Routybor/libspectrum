@@ -288,6 +288,32 @@ class Spectrometer:
         )
         self._producer_process.daemon = True
         self._producer_process.start()
+        
+    def _producer_process(self, data_queue, error_queue, stop_event, frames_per_read):
+        """
+        Функция-Производитель, которая выполняется в отдельном процессе, читая спектры и помещения их в очередь.
+        
+        :param data_queue: Очередь для помещения спектров.
+        :param error_queue: Очередь для помещения ошибок.
+        :param stop_event: Event, сигнализирующий остановку.
+        :param frames_per_read: Кол-во кадров для считывания в одной итерации цикла.
+        """
+        try:
+            self.open()
+            
+            while not stop_event.is_set():
+                try:
+                    spectrum = self.read(n_times=frames_per_read)
+                    data_queue.put(spectrum, timeout=1.0)
+                except queue.Full:
+                    continue
+                except Exception as e:
+                    error_queue.put(str(e))
+                    break
+        except Exception as e:
+            error_queue.put(str(e))
+        finally:
+            self.close()
 
     # --------        config        --------
     @property
