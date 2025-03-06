@@ -1,4 +1,6 @@
 import json
+import multiprocessing
+import queue
 import sys
 from dataclasses import dataclass
 import threading
@@ -250,67 +252,42 @@ class Spectrometer:
         finally:
             if not is_opened:
                self.close()
-
-    def stop_reading(self):
-        """
-        Останавливает поток постоянного считывания спектров, если он был запущен через `read_non_stop`.  
-        """
-        self.__stop_reading_flag = True
-        if self.__reading_thread and self.__reading_thread.is_alive():
-            self.__reading_thread.join()
-        self.__reading_thread = None
-    
-    def _reset_stop_reading(self):
-        self.__stop_reading_flag = False
-
-    def read_non_block(self, callback: Callable[[Spectrum], None], frames_to_read: int, frames_interval: int = 100):
-        """
-        Читает нужное количество кадров в неблокирующем режиме и вызывает callback-функцию для каждого считанного спектра.
         
-        :param callback: функция-callback для вызова с каждым считанным спектром.
-        :param frames_to_read: Максимальное количество кадров для считывания.
-        :param frames_interval: Кол-во кадров для считывания в одной итерации цикла.
+    def read_continuous(self, callback: Callable[[Spectrum], None], 
+                        frames_to_read: Optional[int] = None,
+                        frames_per_read: int = 100,
+                        max_queue_size: int = 10):
         """
-
-        if not self.is_configured:
-            raise ConfigurationError("Spectrometer not configured.")
+        Запускает непрерывное чтение в отдельном процессе и выполняет обратные вызовы в основном процессе.
         
-        is_opened = self.__is_opened
-        try:
-            if not is_opened:
-                   self.open()
-            self._reset_stop_reading()
-            read_frames = 0
-            while (frames_to_read is None or read_frames < frames_to_read) and not self.__stop_reading_flag:
-                spectrum = self.read(n_times=frames_interval)
-                read_frames += frames_interval
-                if spectrum is None:
-                    break
-
-                try:
-                    callback(spectrum)
-                except Exception as e:
-                    eprint(f"Error in callback: {e}")
-                    break
-        finally:
-            if not is_opened:
-                   self.close()
-
-    def read_non_stop(self, callback: Callable[[Spectrum], None], frames_interval: int = 100):
+        :param callback: Функция-callback для вызова с каждым считанным спектром.
+        :param frames_to_read: Максимальное количество кадров для считывания (если None, то бесконечно).
+        :param frames_per_read: Размер единичного спектра для считывания.
+        :param max_queue_size: Максимальный размер очереди до блокировки читающего процесса.
+        :raises RuntimeError: если процесс чтения уже запущен
         """
-        Непрерывно считывает спектры в отдельном потоке и вызывает callback-функцию для каждого считанного спектра.
-        Для остановки чтения спектров используйте метод `stop_reading`.
-
-        :param callback: функция-callback для вызова с каждым считанным спектром.
-        :param frames_interval: Кол-во кадров для считывания в одной итерации цикла.
-        :raises RuntimeError: если поток чтения уже запущен.
-        """
-
-        if self.__reading_thread and self.__reading_thread.is_alive():
-             raise RuntimeError("Reading thread is already running")
+        if hasattr(self, '_producer_process') and self._producer_process and self._producer_process.is_alive():
+            raise RuntimeError("Reading process is already running")
         
-        self.__reading_thread = threading.Thread(target=self.read_non_block, args=(callback, None, frames_interval))
-        self.__reading_thread.start()
+        self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
+        self._error_queue = multiprocessing.Queue()
+        self._stop_event = multiprocessing.Event()
+        self._frame_count = multiprocessing.Value('i', 0)
+        
+        self._consumer_thread = threading.Thread(
+            target=self._consumer_thread,
+            args=(callback, self._data_queue, self._error_queue, self._stop_event, 
+                self._frame_count, frames_to_read)
+        )
+        self._consumer_thread.daemon = True
+        self._consumer_thread.start()
+        
+        self._producer_process = multiprocessing.Process(
+            target=self._producer_process,
+            args=(self._data_queue, self._error_queue, self._stop_event, frames_per_read)
+        )
+        self._producer_process.daemon = True
+        self._producer_process.start()
 
     # --------        config        --------
     @property
