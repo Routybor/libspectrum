@@ -314,6 +314,74 @@ class Spectrometer:
             error_queue.put(str(e))
         finally:
             self.close()
+            
+    def _consumer_thread(self, callback, data_queue, error_queue, stop_event, 
+                        frame_count, frames_to_read=None):
+        """
+        Функция, которая работает в потоке основного процесса для выполнения обратных вызовов.
+        
+        :param callback: Определенная пользователем callback-функция.
+        :param data_queue: Очередь для получения спектров.
+        :param error_queue: Очередь для проверки ошибок.
+        :param stop_event: Event, сигнализирующий о необходимости остановки.
+        :param frame_count: Value для отслеживания количества прочитанных кадров.
+        """
+        while not stop_event.is_set():
+            
+            if frames_to_read is not None and frame_count.value >= frames_to_read:
+                stop_event.set()
+                break
+            
+            try:
+                if not error_queue.empty():
+                    error = error_queue.get_nowait()
+                    eprint(f"Error in producer process: {error}")
+                    break
+            except:
+                pass
+            
+            try:
+                spectrum = data_queue.get(timeout=0.1)
+                try:
+                    callback(spectrum)
+                except Exception as e:
+                    eprint(f"Error in callback: {e}")
+                    stop_event.set()
+                    break
+            except queue.Empty:
+                continue
+            except Exception as e:
+                eprint(f"Error getting data from queue: {e}")
+                break
+            
+            with frame_count.get_lock():
+                frame_count.value += 1
+
+    def stop_continuous_reading(self):
+        """
+        Останавливает непрерывное чтение, запущенное через read_continious, gracefully.
+        """
+        if hasattr(self, '_stop_event') and self._stop_event:
+            self._stop_event.set()
+        
+        if hasattr(self, '_producer_process') and self._producer_process and self._producer_process.is_alive():
+            self._producer_process.join(timeout=5.0)
+            if self._producer_process.is_alive():
+                self._producer_process.terminate()
+        
+        if hasattr(self, '_consumer_thread') and self._consumer_thread and self._consumer_thread.is_alive():
+            self._consumer_thread.join(timeout=5.0)
+        
+        if hasattr(self, '_data_queue'):
+            self._data_queue = None
+        if hasattr(self, '_error_queue'):
+            self._error_queue = None
+        if hasattr(self, '_stop_event'):
+            self._stop_event = None
+        if hasattr(self, '_producer_process'):
+            self._producer_process = None
+        if hasattr(self, '_consumer_thread'):
+            self._consumer_thread = None
 
     # --------        config        --------
     @property
