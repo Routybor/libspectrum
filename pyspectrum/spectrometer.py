@@ -266,7 +266,7 @@ class Spectrometer:
         :param max_queue_size: Максимальный размер очереди до блокировки читающего процесса.
         :raises RuntimeError: если процесс чтения уже запущен
         """
-        if hasattr(self, '_producer_process') and self._producer_process and self._producer_process.is_alive():
+        if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
             raise RuntimeError("Reading process is already running")
         
         self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
@@ -274,20 +274,20 @@ class Spectrometer:
         self._stop_event = multiprocessing.Event()
         self._frame_count = multiprocessing.Value('i', 0)
         
-        self._consumer_thread = threading.Thread(
+        self._consumer_thread_instance = threading.Thread(
             target=self._consumer_thread,
             args=(callback, self._data_queue, self._error_queue, self._stop_event, 
                 self._frame_count, frames_to_read)
         )
-        self._consumer_thread.daemon = True
-        self._consumer_thread.start()
+        self._consumer_thread_instance.daemon = True
+        self._consumer_thread_instance.start()
         
-        self._producer_process = multiprocessing.Process(
+        self._producer_process_instance = multiprocessing.Process(
             target=self._producer_process,
             args=(self._data_queue, self._error_queue, self._stop_event, frames_per_read)
         )
-        self._producer_process.daemon = True
-        self._producer_process.start()
+        self._producer_process_instance.daemon = True
+        self._producer_process_instance.start()
         
     def _producer_process(self, data_queue, error_queue, stop_event, frames_per_read):
         """
@@ -364,13 +364,13 @@ class Spectrometer:
         if hasattr(self, '_stop_event') and self._stop_event:
             self._stop_event.set()
         
-        if hasattr(self, '_producer_process') and self._producer_process and self._producer_process.is_alive():
-            self._producer_process.join(timeout=5.0)
-            if self._producer_process.is_alive():
-                self._producer_process.terminate()
+        if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
+            self._producer_process_instance.join(timeout=5.0)
+            if self._producer_process_instance.is_alive():
+                self._producer_process_instance.terminate()
         
-        if hasattr(self, '_consumer_thread') and self._consumer_thread and self._consumer_thread.is_alive():
-            self._consumer_thread.join(timeout=5.0)
+        if hasattr(self, '_consumer_thread_instance') and self._consumer_thread_instance and self._consumer_thread_instance.is_alive():
+            self._consumer_thread_instance.join(timeout=5.0)
         
         if hasattr(self, '_data_queue'):
             self._data_queue = None
@@ -378,10 +378,10 @@ class Spectrometer:
             self._error_queue = None
         if hasattr(self, '_stop_event'):
             self._stop_event = None
-        if hasattr(self, '_producer_process'):
-            self._producer_process = None
-        if hasattr(self, '_consumer_thread'):
-            self._consumer_thread = None
+        if hasattr(self, '_producer_process_instance'):
+            self._producer_process_instance = None
+        if hasattr(self, '_consumer_thread_instance'):
+            self._consumer_thread_instance = None
 
     # --------        config        --------
     @property
