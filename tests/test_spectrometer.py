@@ -231,6 +231,8 @@ def test_continuous_reading(device: Spectrometer, tmp_path):
     assert completion_event.wait(timeout=5.0), "Reading didn't complete in time"
     assert callback_num == 5
 
+    time.sleep(0.2)
+
     callback_num = 0
     completion_event.clear()
 
