@@ -1,7 +1,6 @@
 import json
-import multiprocessing
-import queue
 import sys
+import queue
 from dataclasses import dataclass
 import threading
 from typing import Callable, Optional
@@ -91,9 +90,13 @@ class Spectrometer:
         self.__dark_signal: Data | None = None
         self.__wavelengths: NDArray[float] | None = None
 
-        
-        self.running = False
         self.__is_opened = False
+
+        self.__reading_lock = threading.RLock()
+        self.__data_queue = queue.Queue(maxsize=10)
+        self.__producer_thread = None
+        self.__consumer_thread = None
+        self.__stop_threads_event = threading.Event()
 
     def open(self):
         """
@@ -101,7 +104,7 @@ class Spectrometer:
         """
         if self.__is_opened:
             return
-            
+
         self.__device: UsbDevice = UsbDevice(vendor=self.__vendor, product=self.__product)
         self.__device.set_timer(self.__config.exposure)
         self.__is_opened = True
@@ -111,8 +114,8 @@ class Spectrometer:
         Закрывает соединение с устройством.
         """
         if not self.__is_opened:
-           return 
-        
+           return
+
         self.__device.close()
         self.__is_opened = False
 
@@ -151,7 +154,7 @@ class Spectrometer:
         is_opened = self.__is_opened
         try:
             if not is_opened:
-               self.open() 
+               self.open()
             self.__dark_signal = self.read_raw(n_times)
         finally:
             if not is_opened:
@@ -190,35 +193,36 @@ class Spectrometer:
 
         :return: Данные с устройства.
         :rtype: Data
-        
+
         :raises RuntimeError: Если устройство не открыто.
         """
-        if self.__device == None or self.__is_opened == False:
-            raise RuntimeError('Device is not opened')
+        with self.__reading_lock:
+            if self.__device == None or self.__is_opened == False:
+                raise RuntimeError('Device is not opened')
 
-        device = self.__device
-        config = self.__config
-        start = self.__factory_config.start
-        end = self.__factory_config.end
-        scale = self.__factory_config.intensity_scale
+            device = self.__device
+            config = self.__config
+            start = self.__factory_config.start
+            end = self.__factory_config.end
+            scale = self.__factory_config.intensity_scale
 
-        direction = -1 if self.__factory_config.reverse else 1
-        n_times = config.n_times if n_times is None else n_times
+            direction = -1 if self.__factory_config.reverse else 1
+            n_times = config.n_times if n_times is None else n_times
 
-        data = device.read_frame(n_times)  # type: Frame
-        intensity = data.samples[:, start:end][:, ::direction] * scale
-        clipped = data.clipped[:, start:end][:, ::direction]
+            data = device.read_frame(n_times)  # type: Frame
+            intensity = data.samples[:, start:end][:, ::direction] * scale
+            clipped = data.clipped[:, start:end][:, ::direction]
 
-        return Data(
-            intensity=intensity,
-            clipped=clipped,
-            exposure=config.exposure,
-        )
+            return Data(
+                intensity=intensity,
+                clipped=clipped,
+                exposure=config.exposure,
+            )
 
     def read(self, n_times: Optional[int] = None, force: bool = False) -> Spectrum:
         """
         Получить обработанный спектр с устройства.
-        
+
         Если устройство еще не было открыто, открывает его автоматически и закрывает после считывания.
         Если устройство было открыто ранее, оставляет его открытым.
 
@@ -228,166 +232,133 @@ class Spectrometer:
         :return: Считанный спектр
         :rtype: Spectrum
         """
-        if self.__wavelengths is None and not force:
-            raise ConfigurationError('Wavelength calibration is not loaded')
-        if self.__dark_signal is None:
-            raise ConfigurationError('Dark signal is not loaded')
+        with self.__reading_lock:
+            if self.__wavelengths is None and not force:
+                raise ConfigurationError('Wavelength calibration is not loaded')
+            if self.__dark_signal is None:
+                raise ConfigurationError('Dark signal is not loaded')
 
-        is_opened = self.__is_opened
-        try:
-            if not is_opened:
-               self.open()
-            data = self.read_raw(n_times)
-            scale = self.__factory_config.intensity_scale
-            return Spectrum(
-                intensity=(data.intensity / scale - np.round(
-                    np.mean(self.__dark_signal.intensity / scale, axis=0))) * scale,
-                clipped=data.clipped,
-                wavelength=self.__wavelengths,
-                exposure=self.__config.exposure,
-            )
-        finally:
-            if not is_opened:
-               self.close()
-        
-    def read_continuous(self, callback: Callable[[Spectrum], None], 
-                        frames_to_read: Optional[int] = None,
-                        frames_per_read: int = 100,
-                        max_queue_size: int = 10):
-        """
-        Запускает непрерывное чтение в отдельном процессе и выполняет обратные вызовы в основном процессе.
-        
-        :param callback: Функция-callback для вызова с каждым считанным спектром.
-        :param frames_to_read: Максимальное количество кадров для считывания (если None, то бесконечно).
-        :param frames_per_read: Размер единичного спектра для считывания.
-        :param max_queue_size: Максимальный размер очереди до блокировки читающего процесса.
-        :raises RuntimeError: если процесс чтения уже запущен
-        """
-        if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
-            raise RuntimeError("Reading process is already running")
-        
-        if hasattr(self, '_reading_completed') and self._reading_completed:
-            self.stop_continuous_reading()
-        self._reading_completed = False
-        
-        self._data_queue = multiprocessing.Queue(maxsize=max_queue_size)
-        self._error_queue = multiprocessing.Queue()
-        self._stop_event = multiprocessing.Event()
-        self._frame_count = multiprocessing.Value('i', 0)
-        
-        self._producer_process_instance = multiprocessing.Process(
-            target=self._producer_process,
-            args=(self._data_queue, self._error_queue, self._stop_event, frames_per_read)
-        )
-        self._producer_process_instance.daemon = True
-        self._producer_process_instance.start()
-        
-        self._callback = callback
-        
-        self._consumer_thread_instance = threading.Thread(
-            target=self._consumer_thread,
-            args=(self._data_queue, self._error_queue, self._stop_event, 
-                self._frame_count, frames_per_read, frames_to_read)
-        )
-        self._consumer_thread_instance.daemon = True
-        self._consumer_thread_instance.start()
-        
-    def _producer_process(self, data_queue, error_queue, stop_event, frames_per_read):
-        """
-        Функция-Производитель, которая выполняется в отдельном процессе, читая спектры и помещения их в очередь.
-        
-        :param data_queue: Очередь для помещения спектров.
-        :param error_queue: Очередь для помещения ошибок.
-        :param stop_event: Event, сигнализирующий остановку.
-        :param frames_per_read: Кол-во кадров для считывания в одной итерации цикла.
-        """
-        try:
+            is_opened = self.__is_opened
+            try:
+                if not is_opened:
+                    self.open()
+                data = self.read_raw(n_times)
+                scale = self.__factory_config.intensity_scale
+                return Spectrum(
+                    intensity=(data.intensity / scale - np.round(
+                        np.mean(self.__dark_signal.intensity / scale, axis=0))) * scale,
+                    clipped=data.clipped,
+                    wavelength=self.__wavelengths,
+                    exposure=self.__config.exposure,
+                )
+            finally:
+                if not is_opened:
+                    self.close()
+
+    def read_continuous(self, callback: Callable[[Spectrum], None], frames_to_read: Optional[int] = None, batch_size: int = 100) -> None:
+        if not self.is_configured:
+            raise ConfigurationError("Spectrometer not configured.")
+
+        if (self.__producer_thread and self.__producer_thread.is_alive()) or \
+        (self.__consumer_thread and self.__consumer_thread.is_alive()):
+            raise RuntimeError("Reading already in progress. Call stop_reading() first.")
+
+        if self.__producer_thread or self.__consumer_thread:
+            self.__threads_cleanup()
+
+        self.__stop_threads_event.clear()
+
+        was_opened = self.__is_opened
+        if not was_opened:
             self.open()
-            
-            while not stop_event.is_set():
-                try:
-                    spectrum = self.read(n_times=frames_per_read)
-                    data_queue.put(spectrum, timeout=1.0)
-                except queue.Full:
-                    continue
-                except Exception as e:
-                    error_queue.put(str(e))
-                    break
-        except Exception as e:
-            error_queue.put(str(e))
-        finally:
-            self.close()
-            
-    def _consumer_thread(self, data_queue, error_queue, stop_event, 
-                        frame_count, frames_per_read, frames_to_read=None):
-        """
-        Функция, которая работает в потоке основного процесса для выполнения обратных вызовов.
-        
-        :param callback: Определенная пользователем callback-функция.
-        :param data_queue: Очередь для получения спектров.
-        :param error_queue: Очередь для проверки ошибок.
-        :param stop_event: Event, сигнализирующий о необходимости остановки.
-        :param frame_count: Value для отслеживания количества прочитанных кадров.
-        :param frames_per_read: Кол-во кадров для считывания в одной итерации цикла.
-        """
-        callback = self._callback
-        while not stop_event.is_set():
-            
-            if frames_to_read is not None and frame_count.value >= frames_to_read:
-                stop_event.set()
-                self._reading_completed = True
-                break
-            
-            try:
-                if not error_queue.empty():
-                    error = error_queue.get_nowait()
-                    eprint(f"Error in producer process: {error}")
-                    break
-            except:
-                pass
-            
-            try:
-                spectrum = data_queue.get(timeout=0.1)
-                try:
-                    callback(spectrum)
-                except Exception as e:
-                    eprint(f"Error in callback: {e}")
-                    stop_event.set()
-                    break
-            except queue.Empty:
-                continue
-            except Exception as e:
-                eprint(f"Error getting data from queue: {e}")
-                break
-            
-            with frame_count.get_lock():
-                frame_count.value += frames_per_read
 
-    def stop_continuous_reading(self):
-        """
-        Останавливает непрерывное чтение, запущенное через read_continious, gracefully.
-        """
-        if hasattr(self, '_stop_event') and self._stop_event and not self._reading_completed:
-            self._stop_event.set()
-        
-        if hasattr(self, '_producer_process_instance') and self._producer_process_instance and self._producer_process_instance.is_alive():
-            self._producer_process_instance.join(timeout=5.0)
-            if self._producer_process_instance.is_alive():
-                self._producer_process_instance.terminate()
-        
-        if hasattr(self, '_consumer_thread_instance') and self._consumer_thread_instance and self._consumer_thread_instance.is_alive():
-            self._consumer_thread_instance.join(timeout=5.0)
-        
-        if hasattr(self, '_data_queue'):
-            self._data_queue = None
-        if hasattr(self, '_error_queue'):
-            self._error_queue = None
-        if hasattr(self, '_stop_event'):
-            self._stop_event = None
-        if hasattr(self, '_producer_process_instance'):
-            self._producer_process_instance = None
-        if hasattr(self, '_consumer_thread_instance'):
-            self._consumer_thread_instance = None
+        if frames_to_read is not None:
+            frames_read = [0]
+
+            def counting_callback(spectrum):
+                callback(spectrum)
+                frames_read[0] += batch_size
+                if frames_read[0] >= frames_to_read:
+                    self.__stop_threads_event.set()
+
+            wrapper_callback = counting_callback
+        else:
+            wrapper_callback = callback
+
+        self.__producer_thread = threading.Thread(
+            target=self.__producer_task,
+            args=(batch_size, was_opened),
+            daemon=True
+        )
+        self.__consumer_thread = threading.Thread(
+            target=self.__consumer_task,
+            args=(wrapper_callback,),
+            daemon=True
+        )
+
+        self.__producer_thread.start()
+        self.__consumer_thread.start()
+
+    def __producer_task(self, batch_size: int, was_opened: bool):
+        try:
+            while not self.__stop_threads_event.is_set():
+                with self.__reading_lock:
+                    spectrum = self.read(n_times=batch_size)
+
+                if self.__stop_threads_event.is_set():
+                    break
+
+                while True:
+                    try:
+                        self.__data_queue.put(spectrum, timeout=0.1)
+                        break
+                    except queue.Full:
+                        if self.__stop_threads_event.is_set():
+                            break
+        except Exception as e:
+            eprint(f"Error in producer thread: {e}")
+        finally:
+            if not was_opened:
+                try:
+                    self.close()
+                except Exception as e:
+                    eprint(f"Error closing device: {e}")
+
+    def __consumer_task(self, callback: Callable[[Spectrum], None]):
+        try:
+            while not self.__stop_threads_event.is_set():
+                try:
+                    spectrum = self.__data_queue.get(timeout=1.0)
+                    try:
+                        callback(spectrum)
+                    except Exception as e:
+                        eprint(f"Error in callback: {e}")
+                    finally:
+                        self.__data_queue.task_done()
+                except queue.Empty:
+                    continue
+        except Exception as e:
+            eprint(f"Error in consumer thread: {e}")
+
+    def stop_reading(self):
+        self.__stop_threads_event.set()
+        self.__threads_cleanup()
+
+    def __threads_cleanup(self):
+        if self.__producer_thread:
+            self.__producer_thread.join(timeout=2.0)
+        if self.__consumer_thread:
+            self.__consumer_thread.join(timeout=2.0)
+
+        while not self.__data_queue.empty():
+            try:
+                self.__data_queue.get_nowait()
+                self.__data_queue.task_done()
+            except queue.Empty:
+                break
+
+        self.__producer_thread = None
+        self.__consumer_thread = None
 
     # --------        config        --------
     @property
