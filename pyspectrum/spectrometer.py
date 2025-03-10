@@ -256,6 +256,21 @@ class Spectrometer:
                     self.close()
 
     def read_continuous(self, callback: Callable[[Spectrum], None], frames_to_read: Optional[int] = None, batch_size: int = 100) -> None:
+        """
+        Непрерывное чтение спектров батчами с вызовом callback-функции для каждого считанного батча спектров.
+            
+        :param callback: Функция-callback, которая будет вызвана для каждого считанного батча (Принимает объект Spectrum в качестве аргумента)
+        :type callback: Callable[[Spectrum], None]
+            
+        :param frames_to_read: Количество кадров для чтения. При отсутствии параметра, чтение будет продолжаться, пока не будет вызван метод stop_reading.
+        :type frames_to_read: int | None
+            
+        :param batch_size: Размер пакета/батча. По умолчанию равен 100.
+        :type batch_size: int
+            
+        :raises ConfigurationError: Если спектрометр не настроен (отсутствует темновой сигнал или калибровка по длине волны).
+        :raises RuntimeError: Если уже выполняется процесс непрерывного чтения.
+        """
         if not self.is_configured:
             raise ConfigurationError("Spectrometer not configured.")
 
@@ -341,6 +356,9 @@ class Spectrometer:
             eprint(f"Error in consumer thread: {e}")
 
     def stop_reading(self):
+        """
+        Останавливает процесс непрерывного чтения, запущенного через вызов метода read_continuous.
+        """
         self.__stop_threads_event.set()
         self.__threads_cleanup()
 
