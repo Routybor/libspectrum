@@ -8,25 +8,31 @@ import time
 
 class MockUsbDevice:
     resolution = 4096
-    
+
     def __init__(self, vendor=0, product=0, read_timeout=0):
         self._opened = True
         self._timer = 0
-        
+
     def set_timer(self, millis):
         self._timer = millis
-        
+
     def read_frame(self, n_times):
         samples = np.array([np.arange(0, self.resolution, 1) + i for i in range(n_times)])
         clipped = np.zeros((n_times, self.resolution), dtype=bool)
         return Frame(samples=samples, clipped=clipped)
-    
+
     @property
     def is_opened(self) -> bool:
         return self._opened
-        
+
     def close(self):
         self._opened = False
+
+    def close_gate(self):
+        pass
+
+    def open_gate(self):
+        pass
 
 # Mock the UsbDevice import in spectrometer module
 @pytest.fixture(autouse=True)
@@ -35,9 +41,9 @@ def mock_usb_device(monkeypatch):
 
 def create_factory_config(path: str, start: int, end: int, reverse: bool, intensity_scale: float = 1.0):
     data = {
-        'start': start, 
-        'end': end, 
-        'reverse': reverse, 
+        'start': start,
+        'end': end,
+        'reverse': reverse,
         'intensity_scale': intensity_scale
     }
     with open(path, 'w') as f:
@@ -88,21 +94,21 @@ def test_full_configuration(tmp_path):
     assert not d1.is_configured
     with pytest.raises(Exception):
         d1.read()
-        
+
     profile_path = str(tmp_path / 'profile.json')
     dark_signal_path = str(tmp_path / 'dark')
     wls = np.arange(0, 10, 1)
     write_calibration_data(profile_path, wls.tolist())
-    
+
     d1.set_config(
         dark_signal_path=dark_signal_path,
         wavelength_calibration_path=profile_path
     )
-    
+
     assert not d1.is_configured
     with pytest.raises(Exception):
         d1.read()
-        
+
     d1.read_dark_signal()
     assert d1.is_configured
     d1.open()
@@ -119,14 +125,14 @@ def test_full_configuration(tmp_path):
     assert d2.is_configured
     d2.open()
     d2.close()
-    
+
 
 def test_incompatible_values(tmp_path, capsys):
     d1 = create_device(tmp_path)
     profile_path = str(tmp_path / 'profile.json')
     dark_signal_path = str(tmp_path / 'dark')
     write_calibration_data(profile_path, [1, 2, 3])
-    
+
     # calibration data has different shape
     with pytest.raises(ValueError):
         d1.set_config(wavelength_calibration_path=profile_path)
@@ -208,7 +214,7 @@ def test_slices():
     assert np.array_equal(data[:,1:].wavelength, np.array([101, 102]))
 
 
-def test_non_block_read(device: Spectrometer, tmp_path):
+def test_continuous_reading(device: Spectrometer, tmp_path):
     profile_path = str(tmp_path / 'profile.json')
     dark_signal_path = str(tmp_path / 'dark')
     wls = np.arange(0, 10, 1)
@@ -216,15 +222,60 @@ def test_non_block_read(device: Spectrometer, tmp_path):
     device.set_config(dark_signal_path=dark_signal_path, wavelength_calibration_path=profile_path)
     device.read_dark_signal()
 
-    frames_read = 0
+    callback_num = 0
+    completion_event = threading.Event()
+
     def callback(spectrum):
-        nonlocal frames_read
-        frames_read += 1
+        nonlocal callback_num
+        callback_num += 1
+        assert isinstance(spectrum, Spectrum)
+        if callback_num == 5:
+            completion_event.set()
+
+    device.read_continuous(callback, frames_to_read=5, batch_size=1)
+
+    assert completion_event.wait(timeout=5.0), "Reading didn't complete in time"
+    assert callback_num == 5
+
+    time.sleep(0.2)
+
+    callback_num = 0
+    completion_event.clear()
+
+    def batch_callback(spectrum):
+        nonlocal callback_num
+        callback_num += 1
+        assert isinstance(spectrum, Spectrum)
+        if callback_num == 3:
+            completion_event.set()
+
+    device.read_continuous(batch_callback, frames_to_read=6, batch_size=2)
+
+    assert completion_event.wait(timeout=5.0), "Reading didn't complete in time"
+    assert callback_num == 3
+
+def test_continuous_reading_stop(device: Spectrometer, tmp_path):
+    profile_path = str(tmp_path / 'profile.json')
+    dark_signal_path = str(tmp_path / 'dark')
+    wls = np.arange(0, 10, 1)
+    write_calibration_data(profile_path, wls.tolist())
+    device.set_config(dark_signal_path=dark_signal_path, wavelength_calibration_path=profile_path)
+    device.read_dark_signal()
+
+    callback_num = 0
+
+    def callback(spectrum):
+        nonlocal callback_num
+        callback_num += 1
         assert isinstance(spectrum, Spectrum)
 
-    device.read_non_block(callback, frames_to_read=5, frames_interval=1)  # Read 5 frames, 1 at time
-    assert frames_read == 5
+    device.read_continuous(callback)
 
-    frames_read = 0
-    device.read_non_block(callback, frames_to_read=6, frames_interval=2)  # Read 6 frames, 2 at time
-    assert frames_read == 3
+    time.sleep(1)
+    device.stop_reading()
+
+    assert callback_num > 0
+
+    count_after_stop = callback_num
+    time.sleep(1)
+    assert callback_num == count_after_stop, "Reading continued after stop_reading was called"
