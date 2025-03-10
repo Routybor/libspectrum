@@ -155,7 +155,9 @@ class Spectrometer:
         try:
             if not is_opened:
                self.open()
+            self.__device.close_gate()
             self.__dark_signal = self.read_raw(n_times)
+            self.__device.open_gate()
         finally:
             if not is_opened:
                self.close()
