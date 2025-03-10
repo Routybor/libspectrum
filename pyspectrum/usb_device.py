@@ -6,6 +6,7 @@ from .data import Frame
 from .usb_context import UsbContext
 
 CMD_CODE_WRITE_CR = 0x01
+CMD_CODE_READ_CR = 0x81
 CMD_CODE_WRITE_TIMER = 0x02
 CMD_CODE_WRITE_PIXEL_NUMBER = 0x0c
 CMD_CODE_READ_ERRORS = 0x92
@@ -255,3 +256,25 @@ class UsbDevice:
         clipped = np.where(samples == np.iinfo(np.uint16).max, 1, 0)
 
         return Frame(samples=samples, clipped=clipped)
+    
+    def open_gate(self):
+        """
+        Открывает затвор спектрометра, сбрасывая 1-й бит в регистре управления (CR).
+        """
+        ans = self._send_command(CMD_CODE_READ_CR, 0)
+        current_cr = struct.unpack('<H', ans[8:10])[0]
+        new_cr = current_cr & 0xFFFD  # 0b1111111111111101
+        self._send_command(CMD_CODE_WRITE_CR, new_cr)
+        
+        time.sleep(0.5)
+
+    def close_gate(self):
+        """
+        Закрывает затвор спектрометра, устанавливая 1-й бит в регистре управления (CR).
+        """
+        ans = self._send_command(CMD_CODE_READ_CR, 0)
+        current_cr = struct.unpack('<H', ans[8:10])[0]
+        new_cr = current_cr | 0x0002  # 0b0000000000000010
+        self._send_command(CMD_CODE_WRITE_CR, new_cr)
+        
+        time.sleep(0.5)
