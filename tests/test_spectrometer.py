@@ -28,6 +28,12 @@ class MockUsbDevice:
     def close(self):
         self._opened = False
 
+    def close_gate(self):
+        pass
+
+    def open_gate(self):
+        pass
+
 # Mock the UsbDevice import in spectrometer module
 @pytest.fixture(autouse=True)
 def mock_usb_device(monkeypatch):
